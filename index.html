@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spesa Sincronizzata in Tempo Reale</title>
+    <title>Lista della Spesa Locale</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome per le icone -->
@@ -24,9 +24,9 @@
         <!-- Header -->
         <div class="bg-emerald-600 p-5 text-white text-center">
             <h1 class="text-xl font-bold flex items-center justify-center gap-2">
-                <i class="fa-solid fa-basket-shopping"></i> Spesa Condivisa
+                <i class="fa-solid fa-basket-shopping"></i> La Mia Spesa
             </h1>
-            <p class="text-emerald-100 text-xs mt-0.5">Stanza: <strong id="current-room-label">famiglia</strong></p>
+            <p class="text-emerald-100 text-xs mt-0.5"><i class="fa-solid fa-hard-drive mr-1"></i> Salvataggio Locale (Offline)</p>
         </div>
 
         <!-- CONTENUTO DELLE SCHEDE (PAGES) -->
@@ -70,7 +70,7 @@
                         <input type="text" id="quantity-input" placeholder="Qtà (es. 1l)" 
                             class="w-1/3 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
 
-                        <!-- Pulsante Foto Prodotto -->
+                        <!-- Pulsante Foto Prodotto (Senza attributo capture per consentire scelta Galleria/Fotocamera) -->
                         <label class="w-1/3 flex items-center justify-center gap-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs text-gray-600 cursor-pointer px-2 py-2 transition">
                             <i class="fa-solid fa-image text-emerald-600"></i>
                             <span id="photo-label" class="truncate">Foto</span>
@@ -222,16 +222,6 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-100 space-y-3">
-                    <div>
-                        <label class="text-xs font-semibold text-gray-700 block mb-1">Stanza Condivisa Attuale</label>
-                        <p class="text-xs text-gray-500 mb-2">Stanza in uso: <strong id="settings-room-label">famiglia</strong></p>
-                        <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-2 rounded-lg text-xs font-medium transition">
-                            Cambia Stanza
-                        </button>
-                    </div>
-                </div>
-
                 <div class="pt-2 text-center">
                     <button onclick="ricaricaListaIniziale()" class="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition underline">
                         Ripristina tutti i prodotti iniziali della spesa
@@ -279,7 +269,7 @@
             <span class="text-[10px] font-medium">Costi & Buoni</span>
         </button>
         <button onclick="switchTab('carte')" id="nav-carte" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
-            <i class="fa-solid fa-id-card text-base mb-0.5"></i>
+            <i class="fa-solid id-card fa-id-card text-base mb-0.5"></i>
             <span class="text-[10px] font-medium">Fedeltà</span>
         </button>
         <button onclick="switchTab('impostazioni')" id="nav-impostazioni" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
@@ -288,40 +278,17 @@
         </button>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
     <script>
         // ==========================================
-        // ⚙️ CONFIGURAZIONE FIREBASE FIRESTORE
+        // 💾 SALVATAGGIO 100% LOCALE (LOCALSTORAGE)
         // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyD4_R5rzyT18ho2-A3C54Cxc8mFIj12Uuk",
-            authDomain: "lista-spesa-f4056.firebaseapp.com",
-            projectId: "lista-spesa-f4056",
-            storageBucket: "lista-spesa-f4056.firebasestorage.app",
-            messagingSenderId: "352176016636",
-            appId: "1:352176016636:web:5aedea63758f2c86fb9b79"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Abilita la persistenza offline di Firestore
-        db.enablePersistence().catch(err => console.log("Persistenza offline non supportata o già attiva."));
-
-        let roomId = localStorage.getItem('shopping_room_id') || 'famiglia';
-        document.getElementById('current-room-label').innerText = roomId;
-        document.getElementById('settings-room-label').innerText = roomId;
-
         let voucherValue = parseFloat(localStorage.getItem('voucher_value')) || 8.0;
         document.getElementById('voucher-value-input').value = voucherValue;
 
-        let unsubscribe = null;
-        let currentItems = [];
-        let currentCosts = [];
-        let currentCards = JSON.parse(localStorage.getItem('shopping_cards') || '[]');
+        let currentItems = JSON.parse(localStorage.getItem('local_shopping_items')) || null;
+        let currentCosts = JSON.parse(localStorage.getItem('local_shopping_costs')) || [];
+        let currentCards = JSON.parse(localStorage.getItem('local_shopping_cards')) || [];
+        
         let html5QrCode = null;
         let base64FotoTemp = '';
 
@@ -340,6 +307,35 @@
             { text: "Carta igienica", category: "Casa e Pulizia" }
         ];
 
+        if (!currentItems) {
+            inizializzaListaDefault();
+        }
+
+        function inizializzaListaDefault() {
+            currentItems = defaultInitialItems.map((item, index) => ({
+                id: 'item-' + index + '-' + Date.now(),
+                text: item.text,
+                category: item.category,
+                quantity: '',
+                photo: '',
+                bought: false
+            }));
+            salvaInLocale();
+            renderAll();
+        }
+
+        window.ricaricaListaIniziale = function() {
+            if (confirm("Vuoi ripristinare tutti i prodotti iniziali nella lista?")) {
+                inizializzaListaDefault();
+            }
+        }
+
+        function salvaInLocale() {
+            localStorage.setItem('local_shopping_items', JSON.stringify(currentItems));
+            localStorage.setItem('local_shopping_costs', JSON.stringify(currentCosts));
+            localStorage.setItem('local_shopping_cards', JSON.stringify(currentCards));
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -353,56 +349,6 @@
             if(activeBtn) {
                 activeBtn.classList.remove('text-gray-400');
                 activeBtn.classList.add('text-emerald-600');
-            }
-        }
-
-        function connettiAlDB() {
-            const docRef = db.collection("liste").doc(roomId);
-
-            if (unsubscribe) unsubscribe();
-
-            unsubscribe = docRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    currentItems = data.articoli || [];
-                    currentCosts = data.costi || [];
-                } else {
-                    inizializzaListaDefault(docRef);
-                }
-                renderAll();
-            }, (error) => {
-                console.error("Errore di connessione:", error);
-            });
-        }
-
-        function inizializzaListaDefault(docRef) {
-            currentItems = defaultInitialItems.map((item, index) => ({
-                id: 'item-' + index + '-' + Date.now(),
-                text: item.text,
-                category: item.category,
-                quantity: '',
-                photo: '',
-                bought: false
-            }));
-            currentCosts = [];
-            docRef.set({ articoli: currentItems, costi: currentCosts });
-        }
-
-        window.ricaricaListaIniziale = function() {
-            if (confirm("Vuoi ripristinare tutti i prodotti iniziali nella lista?")) {
-                const docRef = db.collection("liste").doc(roomId);
-                inizializzaListaDefault(docRef);
-            }
-        }
-
-        async function salvaSulCloud() {
-            try {
-                await db.collection("liste").doc(roomId).set({ 
-                    articoli: currentItems,
-                    costi: currentCosts 
-                }, { merge: true });
-            } catch (e) {
-                console.error("Errore salvataggio cloud: ", e);
             }
         }
 
@@ -445,7 +391,8 @@
             };
 
             currentItems.unshift(newItem);
-            salvaSulCloud();
+            salvaInLocale();
+            renderItems();
 
             input.value = '';
             quantityInput.value = '';
@@ -513,12 +460,13 @@
                 });
             });
 
-            await salvaSulCloud();
+            salvaInLocale();
+            renderItems();
             chiudiModaleImport();
             alert(`Importati con successo ${righeTrovate.length} articoli!`);
         }
 
-        // Form Costi (Arrotondamento Buoni Pasto a cifra tonda)
+        // Form Aggiunta Costo (Arrotondamento Buoni Pasto a cifra tonda)
         document.getElementById('cost-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const dateInput = document.getElementById('cost-date').value;
@@ -539,7 +487,8 @@
             };
 
             currentCosts.unshift(newCost);
-            salvaSulCloud();
+            salvaInLocale();
+            renderCosts();
 
             document.getElementById('cost-amount').value = '';
             document.getElementById('cost-cash').value = '0';
@@ -555,11 +504,11 @@
             if(!name || !number) return;
 
             currentCards.push({ id: 'card-' + Date.now(), name, number, type });
-            localStorage.setItem('shopping_cards', JSON.stringify(currentCards));
+            salvaInLocale();
+            renderCards();
 
             document.getElementById('card-name').value = '';
             document.getElementById('card-number').value = '';
-            renderCards();
         });
 
         window.startCamera = function() {
@@ -598,7 +547,7 @@
 
         window.deleteCard = function(id) {
             currentCards = currentCards.filter(c => c.id !== id);
-            localStorage.setItem('shopping_cards', JSON.stringify(currentCards));
+            salvaInLocale();
             renderCards();
         }
 
@@ -609,22 +558,29 @@
                 }
                 return item;
             });
-            salvaSulCloud();
+            salvaInLocale();
+            renderItems();
+            renderBought();
         }
 
         window.deleteItem = function(id) {
             currentItems = currentItems.filter(item => item.id !== id);
-            salvaSulCloud();
+            salvaInLocale();
+            renderItems();
+            renderBought();
         }
 
         window.deleteCost = function(id) {
             currentCosts = currentCosts.filter(c => c.id !== id);
-            salvaSulCloud();
+            salvaInLocale();
+            renderCosts();
         }
 
         window.pulisciComprati = function() {
             currentItems = currentItems.filter(item => !item.bought);
-            salvaSulCloud();
+            salvaInLocale();
+            renderBought();
+            renderItems();
         }
 
         window.salvaValoreBuono = function() {
@@ -634,17 +590,6 @@
                 localStorage.setItem('voucher_value', voucherValue);
                 renderCosts();
                 alert("Valore buono pasto aggiornato!");
-            }
-        }
-
-        window.cambiaStanza = function() {
-            const nuovaStanza = prompt("Inserisci il nome della stanza o codice condiviso:", roomId);
-            if (nuovaStanza && nuovaStanza.trim() !== "") {
-                roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
-                localStorage.setItem('shopping_room_id', roomId);
-                document.getElementById('current-room-label').innerText = roomId;
-                document.getElementById('settings-room-label').innerText = roomId;
-                connettiAlDB();
             }
         }
 
@@ -847,7 +792,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        connettiAlDB();
+        renderAll();
     </script>
 </body>
 </html>
