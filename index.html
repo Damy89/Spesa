@@ -8,101 +8,284 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome per le icone -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JsBarcode per generare i codici a barre -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Html5-QRCode per scansionare codici con la fotocamera -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- QRCode.js per generare i QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- PDF.js per leggere file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-emerald-50 to-teal-100 min-h-screen py-8 px-4">
+<body class="bg-gradient-to-br from-emerald-50 to-teal-100 min-h-screen pb-24 px-4 pt-6">
 
     <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden mb-12">
         
         <!-- Header -->
-        <div class="bg-emerald-600 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold flex items-center justify-center gap-2">
+        <div class="bg-emerald-600 p-5 text-white text-center">
+            <h1 class="text-xl font-bold flex items-center justify-center gap-2">
                 <i class="fa-solid fa-basket-shopping"></i> Spesa Condivisa
             </h1>
-            <p class="text-emerald-100 text-sm mt-1">Ordinata per categoria e alfabetico</p>
-            
-            <!-- Selettore della Stanza / Lista -->
-            <div class="mt-4 bg-emerald-700/50 p-2 rounded-lg flex items-center justify-between text-xs">
-                <span class="truncate">Stanza: <strong id="current-room-label">famiglia</strong></span>
-                <button onclick="cambiaStanza()" class="bg-white text-emerald-800 font-bold px-2.5 py-1 rounded hover:bg-emerald-50 transition">
-                    Cambia
-                </button>
-            </div>
+            <p class="text-emerald-100 text-xs mt-0.5">Stanza: <strong id="current-room-label">famiglia</strong></p>
         </div>
 
-        <!-- Contenuto Principale -->
-        <div class="p-6">
-            
-            <!-- Form per Aggiungere Articoli -->
-            <form id="add-form" class="space-y-3 mb-6">
-                <div class="flex gap-2">
-                    <input type="text" id="item-input" placeholder="Cosa serve? (es. Latte)" required
-                        class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-medium transition shadow-md flex items-center justify-center">
-                        <i class="fa-solid fa-plus"></i>
+        <!-- CONTENUTO DELLE SCHEDE (PAGES) -->
+        <div class="p-5">
+
+            <!-- TAB 1: DA COMPRARE -->
+            <div id="tab-da-comprare" class="tab-content">
+                
+                <!-- Azioni Rapide (Importa Lista) -->
+                <div class="mb-4 flex justify-between items-center bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-xs">
+                    <span class="text-emerald-800 font-medium">Vuoi importare una lista?</span>
+                    <button onclick="apriModaleImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-medium transition shadow-sm">
+                        <i class="fa-solid fa-file-arrow-down mr-1"></i> Importa Testo / PDF
                     </button>
                 </div>
-                
-                <div class="flex gap-2">
-                    <select id="category-input" class="w-1/2 px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="Frutta e Verdura">🥦 Ortofrutta</option>
-                        <option value="Latticini e Uova">🧀 Latticini e Uova</option>
-                        <option value="Carne e Pesce">🥩 Carne e Pesce</option>
-                        <option value="Dispensa e Pasta">🍝 Dispensa</option>
-                        <option value="Surgelati">🧊 Surgelati</option>
-                        <option value="Bevande">🧃 Bevande</option>
-                        <option value="Igiene e Cura Personale">🧴 Igiene e Cura</option>
-                        <option value="Casa e Pulizia">🧹 Casa e Pulizia</option>
-                        <option value="Altro">🛒 Altro</option>
-                    </select>
 
-                    <input type="text" id="quantity-input" placeholder="Qtà (es. 1 litro)" 
-                        class="w-1/2 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-            </form>
+                <!-- Form per Aggiungere Articoli -->
+                <form id="add-form" class="space-y-3 mb-5">
+                    <div class="flex gap-2">
+                        <input type="text" id="item-input" placeholder="Cosa serve? (es. Latte)" required
+                            class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium transition shadow-md flex items-center justify-center">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <select id="category-input" class="w-1/3 px-2 py-2 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Frutta e Verdura">🥦 Ortofrutta</option>
+                            <option value="Latticini e Uova">🧀 Latticini</option>
+                            <option value="Carne e Pesce">🥩 Carne/Pesce</option>
+                            <option value="Dispensa e Pasta">🍝 Dispensa</option>
+                            <option value="Surgelati">🧊 Surgelati</option>
+                            <option value="Bevande">🧃 Bevande</option>
+                            <option value="Elettronica">⚡ Elettronica</option>
+                            <option value="Igiene e Cura Personale">🧴 Igiene</option>
+                            <option value="Casa e Pulizia">🧹 Casa</option>
+                            <option value="Altro">🛒 Altro</option>
+                        </select>
 
-            <!-- Barra dei Progressi -->
-            <div class="mb-6 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                <div class="flex justify-between text-xs font-semibold text-gray-600 mb-1.5">
-                    <span id="progress-text">Completati: 0 su 0</span>
-                    <span id="progress-percent">0%</span>
+                        <input type="text" id="quantity-input" placeholder="Qtà (es. 1l)" 
+                            class="w-1/3 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+
+                        <!-- Pulsante Foto Prodotto -->
+                        <label class="w-1/3 flex items-center justify-center gap-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs text-gray-600 cursor-pointer px-2 py-2 transition">
+                            <i class="fa-solid fa-image text-emerald-600"></i>
+                            <span id="photo-label" class="truncate">Foto</span>
+                            <input type="file" id="item-photo" accept="image/*" class="hidden" onchange="anteprimaFoto(this)">
+                        </label>
+                    </div>
+                    <!-- Anteprima Foto Selezionata -->
+                    <div id="preview-container" class="hidden relative inline-block">
+                        <img id="img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-gray-300">
+                        <button type="button" onclick="rimuoviFoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow">×</button>
+                    </div>
+                </form>
+
+                <!-- Barra dei Progressi -->
+                <div class="mb-5 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div class="flex justify-between text-xs font-semibold text-gray-600 mb-1">
+                        <span id="progress-text">Completati: 0 su 0</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                    <div id="progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+
+                <!-- Lista Articoli Da Comprare -->
+                <div>
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Da Comprare</h2>
+                    <div id="items-container" class="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                        <div class="text-center py-8 text-gray-400 text-sm">Caricamento lista...</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Lista degli Articoli da Comprare -->
-            <div class="mb-4">
-                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Da Comprare</h2>
-                <div id="items-container" class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
-                    <div class="text-center py-8 text-gray-400 text-sm">Caricamento lista...</div>
-                </div>
-            </div>
-
-            <!-- Lista degli Articoli Comprati -->
-            <div id="bought-section" class="mt-6 pt-4 border-t border-gray-100 hidden">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Già Comprati</h2>
+            <!-- TAB 2: GIÀ COMPRATI -->
+            <div id="tab-comprati" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Articoli Già Comprati</h2>
                     <button onclick="pulisciComprati()" class="text-xs text-red-500 hover:text-red-700 font-medium transition">
                         Elimina tutti
                     </button>
                 </div>
-                <div id="bought-container" class="space-y-2 max-h-[250px] overflow-y-auto pr-1 opacity-75">
+                <div id="bought-container" class="space-y-2 max-h-[450px] overflow-y-auto pr-1">
                     <!-- Articoli spuntati -->
                 </div>
             </div>
 
-            <!-- Stato Connessione -->
-            <div class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-                <span id="connection-status" class="flex items-center gap-1.5 text-amber-500 font-medium">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Connessione...
-                </span>
-                <button onclick="ricaricaListaIniziale()" class="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition underline">
-                    Ripristina tutti i prodotti iniziali
-                </button>
+            <!-- TAB 3: COSTI E BUONI -->
+            <div id="tab-costi" class="tab-content hidden space-y-4">
+                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-emerald-600"></i> Registra Spesa
+                </h2>
+                
+                <form id="cost-form" class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-3">
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-semibold block mb-1">Data Spesa</label>
+                        <input type="date" id="cost-date" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <div class="w-1/2">
+                            <label class="text-[10px] text-gray-500 font-semibold block mb-1">Totale Spesa (€)</label>
+                            <input type="number" step="0.01" id="cost-amount" placeholder="es. 50.00" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="text-[10px] text-gray-500 font-semibold block mb-1">Pagato Contanti/Carta (€)</label>
+                            <input type="number" step="0.01" id="cost-cash" placeholder="es. 10.00" value="0" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-xs font-medium transition shadow-sm">
+                        Registra e Calcola Buoni
+                    </button>
+                </form>
+
+                <!-- Riepilogo Periodi -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
+                        <span class="text-[10px] text-emerald-700 uppercase font-bold block">Spesa Mese Corrente</span>
+                        <span id="monthly-total" class="text-lg font-extrabold text-emerald-800">€ 0.00</span>
+                        <span id="monthly-vouchers" class="text-[10px] text-emerald-600 block mt-0.5">Buoni usati: 0</span>
+                    </div>
+                    <div class="bg-teal-50 p-3 rounded-xl border border-teal-100 text-center">
+                        <span class="text-[10px] text-teal-700 uppercase font-bold block">Spesa Anno Corrente</span>
+                        <span id="yearly-total" class="text-lg font-extrabold text-teal-800">€ 0.00</span>
+                        <span id="yearly-vouchers" class="text-[10px] text-teal-600 block mt-0.5">Buoni usati: 0</span>
+                    </div>
+                </div>
+
+                <!-- Storico Spese -->
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Storico Spese</h3>
+                    <div id="costs-container" class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- Storico dinamico -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: CARTE FEDELTÀ -->
+            <div id="tab-carte" class="tab-content hidden space-y-4">
+                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-emerald-600"></i> Carte Fedeltà
+                </h2>
+
+                <!-- Container Scanner Fotocamera -->
+                <div id="reader-container" class="hidden bg-gray-900 rounded-xl overflow-hidden p-2 text-center">
+                    <div id="reader" class="w-full"></div>
+                    <button onclick="stopCamera()" class="mt-2 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold">
+                        Chiudi Fotocamera
+                    </button>
+                </div>
+
+                <form id="card-form" class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2.5">
+                    <input type="text" id="card-name" placeholder="Nome Negozio (es. Esselunga)" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    
+                    <div class="flex gap-2">
+                        <select id="card-type" class="w-1/3 px-2 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="barcode">Codice a Barre</option>
+                            <option value="qrcode">QR Code</option>
+                        </select>
+                        <input type="text" id="card-number" placeholder="Numero / Codice" required class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="startCamera()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-medium transition shadow-sm">
+                        Salva Carta
+                    </button>
+                </form>
+
+                <div id="cards-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    <!-- Carte con Codice a Barre o QR Code -->
+                </div>
+            </div>
+
+            <!-- TAB 5: IMPOSTAZIONI -->
+            <div id="tab-impostazioni" class="tab-content hidden space-y-4">
+                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-emerald-600"></i> Impostazioni App
+                </h2>
+
+                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-100 space-y-3">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-700 block mb-1">Valore singolo Buono Pasto (€)</label>
+                        <div class="flex gap-2">
+                            <input type="number" step="0.1" id="voucher-value-input" value="8.0" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <button onclick="salvaValoreBuono()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-medium transition">Salva</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-100 space-y-3">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-700 block mb-1">Stanza Condivisa Attuale</label>
+                        <p class="text-xs text-gray-500 mb-2">Stanza in uso: <strong id="settings-room-label">famiglia</strong></p>
+                        <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-2 rounded-lg text-xs font-medium transition">
+                            Cambia Stanza
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 text-center">
+                    <button onclick="ricaricaListaIniziale()" class="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition underline">
+                        Ripristina tutti i prodotti iniziali della spesa
+                    </button>
+                </div>
             </div>
 
         </div>
+    </div>
+
+    <!-- MODALE IMPORTAZIONE RAPIDA (TESTO / PDF / NOTE) -->
+    <div id="import-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-xl">
+            <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-file-arrow-down text-emerald-600"></i> Importa Lista Rapida
+            </h3>
+            <p class="text-xs text-gray-500">Incolla qui sotto il testo copiato dalle tue note (un prodotto per riga) oppure carica un file PDF.</p>
+            
+            <textarea id="import-text" rows="5" placeholder="Latte&#10;Pane&#10;Mele 1kg&#10;Detersivo" class="w-full p-2.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+
+            <div>
+                <label class="text-[10px] text-gray-500 font-semibold block mb-1">Oppure carica un file PDF o di testo:</label>
+                <input type="file" id="import-file" accept=".pdf,.txt" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="chiudiModaleImport()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-xl text-xs font-medium transition">Annulla</button>
+                <button onclick="eseguiImportazione()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-medium transition shadow-sm">Importa Ora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 shadow-lg flex justify-around py-2 px-1 z-50 rounded-t-2xl">
+        <button onclick="switchTab('da-comprare')" id="nav-da-comprare" class="flex flex-col items-center flex-1 py-1 text-emerald-600 transition">
+            <i class="fa-solid fa-cart-shopping text-base mb-0.5"></i>
+            <span class="text-[10px] font-medium">Da Comprare</span>
+        </button>
+        <button onclick="switchTab('comprati')" id="nav-comprati" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
+            <i class="fa-solid fa-basket-shopping text-base mb-0.5"></i>
+            <span class="text-[10px] font-medium">Comprati</span>
+        </button>
+        <button onclick="switchTab('costi')" id="nav-costi" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
+            <i class="fa-solid fa-receipt text-base mb-0.5"></i>
+            <span class="text-[10px] font-medium">Costi & Buoni</span>
+        </button>
+        <button onclick="switchTab('carte')" id="nav-carte" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
+            <i class="fa-solid fa-id-card text-base mb-0.5"></i>
+            <span class="text-[10px] font-medium">Fedeltà</span>
+        </button>
+        <button onclick="switchTab('impostazioni')" id="nav-impostazioni" class="flex flex-col items-center flex-1 py-1 text-gray-400 hover:text-gray-600 transition">
+            <i class="fa-solid fa-gear text-base mb-0.5"></i>
+            <span class="text-[10px] font-medium">Impostazioni</span>
+        </button>
     </div>
 
     <!-- Firebase SDK -->
@@ -111,7 +294,7 @@
 
     <script>
         // ==========================================
-        // ⚙️ CONFIGURAZIONE FIREBASE
+        // ⚙️ CONFIGURAZIONE FIREBASE FIRESTORE
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyD4_R5rzyT18ho2-A3C54Cxc8mFIj12Uuk",
@@ -125,120 +308,70 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Abilita la persistenza offline di Firestore
+        db.enablePersistence().catch(err => console.log("Persistenza offline non supportata o già attiva."));
+
         let roomId = localStorage.getItem('shopping_room_id') || 'famiglia';
         document.getElementById('current-room-label').innerText = roomId;
+        document.getElementById('settings-room-label').innerText = roomId;
+
+        let voucherValue = parseFloat(localStorage.getItem('voucher_value')) || 8.0;
+        document.getElementById('voucher-value-input').value = voucherValue;
 
         let unsubscribe = null;
         let currentItems = [];
+        let currentCosts = [];
+        let currentCards = JSON.parse(localStorage.getItem('shopping_cards') || '[]');
+        let html5QrCode = null;
+        let base64FotoTemp = '';
 
-        // Lista iniziale completa fornita dall'utente
+        document.getElementById('cost-date').valueAsDate = new Date();
+
         const defaultInitialItems = [
             { text: "Broccoli surgelati", category: "Surgelati" },
             { text: "Latte", category: "Latticini e Uova" },
-            { text: "Tortini di verdure", category: "Surgelati" },
             { text: "Banana", category: "Frutta e Verdura" },
-            { text: "Fragole", category: "Frutta e Verdura" },
             { text: "Pomodorini", category: "Frutta e Verdura" },
-            { text: "Cetrioli", category: "Frutta e Verdura" },
-            { text: "Finocchio", category: "Frutta e Verdura" },
             { text: "Patate", category: "Frutta e Verdura" },
-            { text: "Zucchine", category: "Frutta e Verdura" },
-            { text: "Carote", category: "Frutta e Verdura" },
-            { text: "Pesto", category: "Dispensa e Pasta" },
-            { text: "Pancarrè", category: "Dispensa e Pasta" },
-            { text: "Legumi", category: "Dispensa e Pasta" },
-            { text: "Riso basmati", category: "Dispensa e Pasta" },
-            { text: "Mangiare Layon", category: "Dispensa e Pasta" },
-            { text: "Crodino", category: "Bevande" },
-            { text: "Acqua", category: "Bevande" },
-            { text: "Zucchero", category: "Dispensa e Pasta" },
-            { text: "Farina 00", category: "Dispensa e Pasta" },
-            { text: "Sale fino", category: "Dispensa e Pasta" },
-            { text: "Scottex", category: "Casa e Pulizia" },
-            { text: "Fazzoletti", category: "Igiene e Cura Personale" },
-            { text: "Olive nere", category: "Dispensa e Pasta" },
-            { text: "Farina di cocco", category: "Dispensa e Pasta" },
-            { text: "Yogurt non di soia", category: "Latticini e Uova" },
-            { text: "Cereali", category: "Dispensa e Pasta" },
-            { text: "Curcuma", category: "Dispensa e Pasta" },
-            { text: "Fette biscottate", category: "Dispensa e Pasta" },
-            { text: "Burro d’arachidi", category: "Dispensa e Pasta" },
-            { text: "Crackers", category: "Dispensa e Pasta" },
-            { text: "Pane", category: "Dispensa e Pasta" },
-            { text: "Pepe", category: "Dispensa e Pasta" },
-            { text: "Aglio surgelato", category: "Surgelati" },
-            { text: "Limone bio", category: "Frutta e Verdura" },
-            { text: "Kiwi", category: "Frutta e Verdura" },
-            { text: "Fave", category: "Frutta e Verdura" },
-            { text: "Cicorie", category: "Frutta e Verdura" },
-            { text: "Verdura", category: "Frutta e Verdura" },
-            { text: "Insalata", category: "Frutta e Verdura" },
-            { text: "Cavolo", category: "Frutta e Verdura" },
-            { text: "Carciofi", category: "Frutta e Verdura" },
-            { text: "Cioccolato fondente", category: "Dispensa e Pasta" },
-            { text: "Affettato (crudo, speck)", category: "Carne e Pesce" },
-            { text: "Detersivo piatti", category: "Casa e Pulizia" },
-            { text: "Asciugamani monouso", category: "Casa e Pulizia" },
-            { text: "Dentifricio", category: "Igiene e Cura Personale" },
-            { text: "Carta igienica", category: "Casa e Pulizia" },
-            { text: "Carne", category: "Carne e Pesce" },
-            { text: "Pesce", category: "Carne e Pesce" },
-            { text: "Biscotti", category: "Dispensa e Pasta" },
-            { text: "Grissini quelli piccoli", category: "Dispensa e Pasta" },
-            { text: "Yogurt di soia", category: "Latticini e Uova" },
-            { text: "Formaggio", category: "Latticini e Uova" },
-            { text: "Farro", category: "Dispensa e Pasta" },
             { text: "Pasta", category: "Dispensa e Pasta" },
-            { text: "Riso Venere", category: "Dispensa e Pasta" },
-            { text: "Riso rosso", category: "Dispensa e Pasta" },
+            { text: "Pane", category: "Dispensa e Pasta" },
             { text: "Uova", category: "Latticini e Uova" },
-            { text: "Formaggio spalmabile", category: "Latticini e Uova" },
-            { text: "Maionese", category: "Dispensa e Pasta" },
-            { text: "Ketchup", category: "Dispensa e Pasta" },
-            { text: "Salsa", category: "Dispensa e Pasta" },
-            { text: "Passata di Pomodoro", category: "Dispensa e Pasta" },
-            { text: "Surgelati (hamburger, spinaci, tortini, broccoli)", category: "Surgelati" },
-            { text: "Bagnoschiuma", category: "Igiene e Cura Personale" },
-            { text: "Shampoo Gioia", category: "Igiene e Cura Personale" },
-            { text: "Tonno", category: "Dispensa e Pasta" },
-            { text: "Würstel", category: "Carne e Pesce" },
-            { text: "Panna", category: "Latticini e Uova" },
-            { text: "Sciroppo d’agave", category: "Dispensa e Pasta" },
-            { text: "Succo lime (no limone)", category: "Bevande" },
-            { text: "Olio", category: "Dispensa e Pasta" },
-            { text: "Mozzarella", category: "Latticini e Uova" },
-            { text: "Borotalco", category: "Igiene e Cura Personale" },
-            { text: "Scamorza", category: "Latticini e Uova" },
-            { text: "Salvaslip", category: "Igiene e Cura Personale" },
-            { text: "Limone in barattolo", category: "Dispensa e Pasta" },
-            { text: "Olio spray", category: "Dispensa e Pasta" },
-            { text: "Cocco rapè", category: "Dispensa e Pasta" },
-            { text: "Assorbenti", category: "Igiene e Cura Personale" },
-            { text: "Amido di mais", category: "Dispensa e Pasta" },
-            { text: "Cottonfioc", category: "Igiene e Cura Personale" }
+            { text: "Acqua", category: "Bevande" },
+            { text: "Carta igienica", category: "Casa e Pulizia" }
         ];
 
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('body .fixed button').forEach(btn => {
+                btn.classList.remove('text-emerald-600');
+                btn.classList.add('text-gray-400');
+            });
+
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-400');
+                activeBtn.classList.add('text-emerald-600');
+            }
+        }
+
         function connettiAlDB() {
-            const statusEl = document.getElementById('connection-status');
             const docRef = db.collection("liste").doc(roomId);
 
             if (unsubscribe) unsubscribe();
 
             unsubscribe = docRef.onSnapshot((doc) => {
-                statusEl.innerHTML = '<i class="fa-solid fa-circle text-emerald-500 text-[8px]"></i> Sincronizzato';
-                statusEl.className = "flex items-center gap-1.5 text-emerald-600 font-medium";
-
-                if (doc.exists && doc.data().articoli && doc.data().articoli.length > 0) {
-                    currentItems = doc.data().articoli;
+                if (doc.exists) {
+                    const data = doc.data();
+                    currentItems = data.articoli || [];
+                    currentCosts = data.costi || [];
                 } else {
-                    // Carica la lista iniziale se il documento è vuoto
                     inizializzaListaDefault(docRef);
                 }
-                renderItems();
+                renderAll();
             }, (error) => {
                 console.error("Errore di connessione:", error);
-                statusEl.innerHTML = '<i class="fa-solid fa-circle text-red-500 text-[8px]"></i> Errore connessione';
-                statusEl.className = "flex items-center gap-1.5 text-red-600 font-medium";
             });
         }
 
@@ -248,12 +381,13 @@
                 text: item.text,
                 category: item.category,
                 quantity: '',
+                photo: '',
                 bought: false
             }));
-            docRef.set({ articoli: currentItems });
+            currentCosts = [];
+            docRef.set({ articoli: currentItems, costi: currentCosts });
         }
 
-        // Funzione per forzare il ripristino di tutti i prodotti iniziali se la stanza era già vuota/salvata male
         window.ricaricaListaIniziale = function() {
             if (confirm("Vuoi ripristinare tutti i prodotti iniziali nella lista?")) {
                 const docRef = db.collection("liste").doc(roomId);
@@ -263,10 +397,33 @@
 
         async function salvaSulCloud() {
             try {
-                await db.collection("liste").doc(roomId).set({ articoli: currentItems });
+                await db.collection("liste").doc(roomId).set({ 
+                    articoli: currentItems,
+                    costi: currentCosts 
+                }, { merge: true });
             } catch (e) {
-                console.error("Errore salvataggio: ", e);
+                console.error("Errore salvataggio cloud: ", e);
             }
+        }
+
+        window.anteprimaFoto = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    base64FotoTemp = e.target.result;
+                    document.getElementById('img-preview').src = base64FotoTemp;
+                    document.getElementById('preview-container').classList.remove('hidden');
+                    document.getElementById('photo-label').innerText = 'Pronta';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.rimuoviFoto = function() {
+            base64FotoTemp = '';
+            document.getElementById('item-photo').value = '';
+            document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('photo-label').innerText = 'Foto';
         }
 
         document.getElementById('add-form').addEventListener('submit', (e) => {
@@ -283,6 +440,7 @@
                 text: text,
                 category: categorySelect.value,
                 quantity: quantityInput.value.trim(),
+                photo: base64FotoTemp,
                 bought: false
             };
 
@@ -291,8 +449,158 @@
 
             input.value = '';
             quantityInput.value = '';
+            rimuoviFoto();
             input.focus();
         });
+
+        window.apriModaleImport = function() {
+            document.getElementById('import-text').value = '';
+            document.getElementById('import-file').value = '';
+            document.getElementById('import-modal').classList.remove('hidden');
+        }
+
+        window.chiudiModaleImport = function() {
+            document.getElementById('import-modal').classList.add('hidden');
+        }
+
+        window.eseguiImportazione = async function() {
+            const textContent = document.getElementById('import-text').value.trim();
+            const fileInput = document.getElementById('import-file').files[0];
+
+            let righeTrovate = [];
+
+            if (textContent) {
+                righeTrovate = textContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            }
+
+            if (fileInput) {
+                if (fileInput.type === "application/pdf") {
+                    try {
+                        const arrayBuffer = await fileInput.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let textPdf = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContentPage = await page.getTextContent();
+                            textPdf += textContentPage.items.map(item => item.str).join('\n') + '\n';
+                        }
+                        const righePdf = textPdf.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        righeTrovate = righeTrovate.concat(righePdf);
+                    } catch (err) {
+                        alert("Errore nella lettura del file PDF.");
+                        return;
+                    }
+                } else {
+                    const textFile = await fileInput.text();
+                    const righeFile = textFile.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    righeTrovate = righeTrovate.concat(righeFile);
+                }
+            }
+
+            if (righeTrovate.length === 0) {
+                alert("Nessun articolo trovato da importare.");
+                return;
+            }
+
+            righeTrovate.forEach((riga, index) => {
+                currentItems.unshift({
+                    id: 'import-' + Date.now() + '-' + index,
+                    text: riga,
+                    category: 'Dispensa e Pasta',
+                    quantity: '',
+                    photo: '',
+                    bought: false
+                });
+            });
+
+            await salvaSulCloud();
+            chiudiModaleImport();
+            alert(`Importati con successo ${righeTrovate.length} articoli!`);
+        }
+
+        // Form Costi (Arrotondamento Buoni Pasto a cifra tonda)
+        document.getElementById('cost-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const dateInput = document.getElementById('cost-date').value;
+            const amountInput = parseFloat(document.getElementById('cost-amount').value);
+            const cashInput = parseFloat(document.getElementById('cost-cash').value) || 0;
+
+            if (!dateInput || isNaN(amountInput)) return;
+
+            const coveredByVouchers = Math.max(0, amountInput - cashInput);
+            const vouchersUsed = Math.round(coveredByVouchers / voucherValue);
+
+            const newCost = {
+                id: 'cost-' + Date.now(),
+                date: dateInput,
+                amount: amountInput,
+                cash: cashInput,
+                vouchers: vouchersUsed
+            };
+
+            currentCosts.unshift(newCost);
+            salvaSulCloud();
+
+            document.getElementById('cost-amount').value = '';
+            document.getElementById('cost-cash').value = '0';
+            document.getElementById('cost-date').valueAsDate = new Date();
+        });
+
+        document.getElementById('card-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('card-name').value.trim();
+            const number = document.getElementById('card-number').value.trim();
+            const type = document.getElementById('card-type').value;
+
+            if(!name || !number) return;
+
+            currentCards.push({ id: 'card-' + Date.now(), name, number, type });
+            localStorage.setItem('shopping_cards', JSON.stringify(currentCards));
+
+            document.getElementById('card-name').value = '';
+            document.getElementById('card-number').value = '';
+            renderCards();
+        });
+
+        window.startCamera = function() {
+            document.getElementById('reader-container').classList.remove('hidden');
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText, decodedResult) => {
+                    document.getElementById('card-number').value = decodedText;
+                    if (decodedResult.result.format && decodedResult.result.format.formatName.includes("QR")) {
+                        document.getElementById('card-type').value = "qrcode";
+                    } else {
+                        document.getElementById('card-type').value = "barcode";
+                    }
+                    stopCamera();
+                },
+                (errorMessage) => {}
+            ).catch(err => {
+                alert("Errore fotocamera: " + err);
+                stopCamera();
+            });
+        }
+
+        window.stopCamera = function() {
+            if(html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('reader-container').classList.add('hidden');
+                }).catch(() => {
+                    document.getElementById('reader-container').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('reader-container').classList.add('hidden');
+            }
+        }
+
+        window.deleteCard = function(id) {
+            currentCards = currentCards.filter(c => c.id !== id);
+            localStorage.setItem('shopping_cards', JSON.stringify(currentCards));
+            renderCards();
+        }
 
         window.toggleItem = function(id) {
             currentItems = currentItems.map(item => {
@@ -309,9 +617,24 @@
             salvaSulCloud();
         }
 
+        window.deleteCost = function(id) {
+            currentCosts = currentCosts.filter(c => c.id !== id);
+            salvaSulCloud();
+        }
+
         window.pulisciComprati = function() {
             currentItems = currentItems.filter(item => !item.bought);
             salvaSulCloud();
+        }
+
+        window.salvaValoreBuono = function() {
+            const val = parseFloat(document.getElementById('voucher-value-input').value);
+            if(!isNaN(val) && val > 0) {
+                voucherValue = val;
+                localStorage.setItem('voucher_value', voucherValue);
+                renderCosts();
+                alert("Valore buono pasto aggiornato!");
+            }
         }
 
         window.cambiaStanza = function() {
@@ -320,22 +643,24 @@
                 roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
                 localStorage.setItem('shopping_room_id', roomId);
                 document.getElementById('current-room-label').innerText = roomId;
+                document.getElementById('settings-room-label').innerText = roomId;
                 connettiAlDB();
             }
         }
 
+        function renderAll() {
+            renderItems();
+            renderBought();
+            renderCosts();
+            renderCards();
+        }
+
         function renderItems() {
             const container = document.getElementById('items-container');
-            const boughtContainer = document.getElementById('bought-container');
-            const boughtSection = document.getElementById('bought-section');
-
             container.innerHTML = '';
-            boughtContainer.innerHTML = '';
 
             let toBuy = currentItems.filter(item => !item.bought);
-            let bought = currentItems.filter(item => item.bought);
 
-            // Ordinamento intelligente: prima per categoria, poi in ordine alfabetico per nome
             toBuy.sort((a, b) => {
                 if (a.category !== b.category) {
                     return a.category.localeCompare(b.category);
@@ -343,60 +668,172 @@
                 return a.text.localeCompare(b.text);
             });
 
-            if (toBuy.length === 0 && bought.length === 0) {
+            if (toBuy.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-gray-400 text-sm">
                         <i class="fa-regular fa-face-smile text-3xl mb-2 block text-emerald-400"></i>
-                        La lista è vuota. Aggiungi qualcosa!
+                        La lista da comprare è vuota!
                     </div>`;
-            } else if (toBuy.length === 0) {
-                container.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs italic">Hai comprato tutto! 🎉</div>`;
             }
 
             toBuy.forEach(item => {
-                const div = createItemElement(item);
-                container.appendChild(div);
+                container.appendChild(createItemElement(item));
             });
 
-            if (bought.length > 0) {
-                boughtSection.classList.remove('hidden');
-                bought.forEach(item => {
-                    const div = createItemElement(item);
-                    boughtContainer.appendChild(div);
-                });
-            } else {
-                boughtSection.classList.add('hidden');
+            updateProgress(currentItems.filter(i => i.bought).length, currentItems.length);
+        }
+
+        function renderBought() {
+            const container = document.getElementById('bought-container');
+            container.innerHTML = '';
+
+            let bought = currentItems.filter(item => item.bought);
+
+            if (bought.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">Nessun articolo comprato finora.</div>`;
             }
 
-            updateProgress(bought.length, currentItems.length);
+            bought.forEach(item => {
+                container.appendChild(createItemElement(item));
+            });
         }
 
         function createItemElement(item) {
             const div = document.createElement('div');
             div.className = `flex items-center justify-between p-3 rounded-xl border transition-all ${
-                item.bought ? 'bg-gray-50 border-gray-200 opacity-60' : 'bg-white border-gray-100 shadow-sm hover:border-emerald-200'
+                item.bought ? 'bg-gray-50 border-gray-200 opacity-70' : 'bg-white border-gray-100 shadow-sm hover:border-emerald-200'
             }`;
 
+            const photoHtml = item.photo ? `<img src="${item.photo}" class="w-12 h-12 object-cover rounded-lg mr-3 shrink-0 border border-gray-200 shadow-sm">` : '';
+
             div.innerHTML = `
-                <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="toggleItem('${item.id}')">
-                    <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                <div class="flex items-center gap-2 flex-1 cursor-pointer overflow-hidden" onclick="toggleItem('${item.id}')">
+                    <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         item.bought ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 bg-white'
                     }">
                         ${item.bought ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
                     </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-800 ${item.bought ? 'line-through text-gray-400' : ''}">${escapeHtml(item.text)}</p>
+                    ${photoHtml}
+                    <div class="flex-1 truncate">
+                        <p class="text-sm font-medium text-gray-800 truncate ${item.bought ? 'line-through text-gray-400' : ''}">${escapeHtml(item.text)}</p>
                         <div class="flex gap-2 text-[10px] text-gray-400 mt-0.5">
                             <span class="font-semibold text-emerald-600">${escapeHtml(item.category)}</span>
-                            ${item.quantity ? `<span>• \${escapeHtml(item.quantity)}</span>` : ''}
+                            ${item.quantity ? `<span>• ${escapeHtml(item.quantity)}</span>` : ''}
                         </div>
                     </div>
                 </div>
-                <button onclick="deleteItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 transition">
+                <button onclick="deleteItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 transition shrink-0">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             `;
             return div;
+        }
+
+        function renderCosts() {
+            const container = document.getElementById('costs-container');
+            container.innerHTML = '';
+
+            const now = new Date();
+            const currentMonth = now.toISOString().slice(0, 7);
+            const currentYear = now.getFullYear().toString();
+
+            let monthlyTotal = 0;
+            let monthlyVouchers = 0;
+            let yearlyTotal = 0;
+            let yearlyVouchers = 0;
+
+            if(currentCosts.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 text-xs">Nessuna spesa registrata.</div>`;
+            }
+
+            currentCosts.forEach(cost => {
+                if (cost.date.startsWith(currentMonth)) {
+                    monthlyTotal += cost.amount;
+                    monthlyVouchers += cost.vouchers;
+                }
+                if (cost.date.startsWith(currentYear)) {
+                    yearlyTotal += cost.amount;
+                    yearlyVouchers += cost.vouchers;
+                }
+
+                const cashText = cost.cash ? ` • Contanti: € ${cost.cash.toFixed(2)}` : '';
+
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-xs";
+                div.innerHTML = `
+                    <div>
+                        <span class="font-bold text-gray-700 block">${cost.date}</span>
+                        <span class="text-gray-500">Buoni: <strong class="text-emerald-700">${cost.vouchers}</strong>${cashText}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-extrabold text-emerald-600 text-sm">€ ${cost.amount.toFixed(2)}</span>
+                        <button onclick="deleteCost('${cost.id}')" class="text-gray-300 hover:text-red-500 p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('monthly-total').innerText = `€ ${monthlyTotal.toFixed(2)}`;
+            document.getElementById('monthly-vouchers').innerText = `Buoni usati: ${monthlyVouchers}`;
+            document.getElementById('yearly-total').innerText = `€ ${yearlyTotal.toFixed(2)}`;
+            document.getElementById('yearly-vouchers').innerText = `Buoni usati: ${yearlyVouchers}`;
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            if(currentCards.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 text-xs">Nessuna carta fedeltà salvata.</div>`;
+                return;
+            }
+
+            currentCards.forEach(card => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-between";
+                
+                const codeContainerHtml = (card.type === 'qrcode') 
+                    ? `<div id="qrcode-${card.id}" class="py-2 flex justify-center"></div>`
+                    : `<svg id="barcode-${card.id}" class="max-w-full"></svg>`;
+
+                div.innerHTML = `
+                    <div class="w-full flex justify-between items-center mb-2">
+                        <div>
+                            <strong class="font-bold text-emerald-900 text-sm block">${escapeHtml(card.name)}</strong>
+                            <span class="text-[10px] text-gray-400 font-mono">${escapeHtml(card.number)}</span>
+                        </div>
+                        <button onclick="deleteCard('${card.id}')" class="text-gray-300 hover:text-red-500 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="bg-white p-2 rounded w-full flex justify-center items-center">
+                        ${codeContainerHtml}
+                    </div>
+                `;
+                container.appendChild(div);
+
+                if (card.type === 'qrcode') {
+                    new QRCode(document.getElementById(`qrcode-${card.id}`), {
+                        text: card.number,
+                        width: 130,
+                        height: 130,
+                        colorDark : "#111827",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                } else {
+                    try {
+                        JsBarcode(`#barcode-${card.id}`, card.number, {
+                            format: "CODE128",
+                            lineColor: "#111827",
+                            width: 1.8,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 12
+                        });
+                    } catch(e) {
+                        console.error("Errore generazione barcode:", e);
+                    }
+                }
+            });
         }
 
         function updateProgress(comprati, totale) {
