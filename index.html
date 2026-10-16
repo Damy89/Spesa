@@ -66,6 +66,12 @@
                             <i class="fa-solid fa-plus text-xs"></i>
                         </button>
                     </div>
+
+                    <!-- Input Nota Aggiuntiva (es. pentola da 32) -->
+                    <div>
+                        <input type="text" id="note-input" placeholder="Nota opzionale (es. pentola da 32)" 
+                            class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+                    </div>
                     
                     <div class="flex gap-1.5 items-center">
                         <select id="category-input" class="w-1/3 px-1.5 py-1.5 border border-gray-200 rounded-xl text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -239,10 +245,10 @@
                 </div>
 
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
-                    <label class="font-semibold text-gray-700 block">Stanza Condivisa Attuale</label>
+                    <label class="font-semibold text-gray-700 block">Stanza Corrente</label>
                     <p class="text-gray-500 mb-1">In uso: <strong id="settings-room-label">famiglia</strong></p>
                     <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-1.5 rounded-lg font-medium transition">
-                        Cambia Stanza
+                        Cambia Stanza (es. personal-damy)
                     </button>
                 </div>
 
@@ -340,16 +346,22 @@
         document.getElementById('cost-date').valueAsDate = new Date();
 
         const defaultInitialItems = [
-            { text: "Broccoli surgelati", category: "Surgelati" },
-            { text: "Latte", category: "Latticini e Uova" },
-            { text: "Banana", category: "Frutta e Verdura" },
-            { text: "Pomodorini", category: "Frutta e Verdura" },
-            { text: "Patate", category: "Frutta e Verdura" },
-            { text: "Pasta", category: "Dispensa e Pasta" },
-            { text: "Pane", category: "Dispensa e Pasta" },
-            { text: "Uova", category: "Latticini e Uova" },
-            { text: "Acqua", category: "Bevande" },
-            { text: "Carta igienica", category: "Casa e Pulizia" }
+            { text: "Broccoli surgelati", category: "Surgelati", note: "" },
+            { text: "Latte", category: "Latticini e Uova", note: "" },
+            { text: "Banana", category: "Frutta e Verdura", note: "" },
+            { text: "Pomodorini", category: "Frutta e Verdura", note: "" },
+            { text: "Patate", category: "Frutta e Verdura", note: "" },
+            { text: "Pasta", category: "Dispensa e Pasta", note: "" },
+            { text: "Pane", category: "Dispensa e Pasta", note: "" },
+            { text: "Uova", category: "Latticini e Uova", note: "" },
+            { text: "Acqua", category: "Bevande", note: "" },
+            { text: "Carta igienica", category: "Casa e Pulizia", note: "" }
+        ];
+
+        const categorieDisponibili = [
+            "Frutta e Verdura", "Latticini e Uova", "Carne e Pesce", 
+            "Dispensa e Pasta", "Surgelati", "Bevande", 
+            "Elettronica", "Igiene e Cura Personale", "Casa e Pulizia", "Altro"
         ];
 
         function switchTab(tabId) {
@@ -394,6 +406,7 @@
                 text: item.text,
                 category: item.category,
                 quantity: '',
+                note: '',
                 photo: '',
                 bought: false
             }));
@@ -471,6 +484,7 @@
         document.getElementById('add-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const input = document.getElementById('item-input');
+            const noteInput = document.getElementById('note-input');
             const categorySelect = document.getElementById('category-input');
             const quantityInput = document.getElementById('quantity-input');
 
@@ -482,6 +496,7 @@
                 text: text,
                 category: categorySelect.value,
                 quantity: quantityInput.value.trim(),
+                note: noteInput.value.trim(),
                 photo: base64FotoTemp,
                 bought: false
             };
@@ -490,10 +505,34 @@
             salvaSulCloud();
 
             input.value = '';
+            noteInput.value = '';
             quantityInput.value = '';
             rimuoviFoto();
             input.focus();
         });
+
+        // Cambio Categoria Rapido al click sulla categoria dell'articolo
+        window.cambiaCategoriaArticolo = function(id, event) {
+            event.stopPropagation();
+            const item = currentItems.find(i => i.id === id);
+            if (!item) return;
+
+            let promptMsg = "Scegli la nuova categoria:\n";
+            categorieDisponibili.forEach((cat, idx) => {
+                promptMsg += `${idx + 1}. ${cat}\n`;
+            });
+
+            const scelta = prompt(promptMsg + "\nDigita il nome esatto della categoria:");
+            if (scelta) {
+                const trovata = categorieDisponibili.find(c => c.toLowerCase() === scelta.trim().toLowerCase());
+                if (trovata) {
+                    item.category = trovata;
+                    salvaSulCloud();
+                } else {
+                    alert("Categoria non valida.");
+                }
+            }
+        }
 
         window.apriModaleImport = function() {
             document.getElementById('import-text').value = '';
@@ -550,6 +589,7 @@
                     text: riga,
                     category: 'Dispensa e Pasta',
                     quantity: '',
+                    note: '',
                     photo: '',
                     bought: false
                 });
@@ -586,7 +626,6 @@
             document.getElementById('cost-date').valueAsDate = new Date();
         });
 
-        // Form Carte Fedeltà (Sincronizzate sul Cloud)
         document.getElementById('card-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('card-name').value.trim();
@@ -677,7 +716,7 @@
         }
 
         window.cambiaStanza = function() {
-            const nuovaStanza = prompt("Inserisci il nome della stanza o codice condiviso:", roomId);
+            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal-damy):", roomId);
             if (nuovaStanza && nuovaStanza.trim() !== "") {
                 roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
                 localStorage.setItem('shopping_room_id', roomId);
@@ -744,6 +783,7 @@
             }`;
 
             const photoHtml = item.photo ? `<img src="${item.photo}" class="w-10 h-10 object-cover rounded-lg mr-2 shrink-0 border border-gray-200 shadow-sm">` : '';
+            const noteHtml = item.note ? `<span class="text-gray-500 italic block text-[9px]">Nota: ${escapeHtml(item.note)}</span>` : '';
 
             div.innerHTML = `
                 <div class="flex items-center gap-2 flex-1 cursor-pointer overflow-hidden" onclick="toggleItem('${item.id}')">
@@ -755,8 +795,9 @@
                     ${photoHtml}
                     <div class="flex-1 truncate">
                         <p class="text-xs font-medium text-gray-800 truncate ${item.bought ? 'line-through text-gray-400' : ''}">${escapeHtml(item.text)}</p>
-                        <div class="flex gap-2 text-[9px] text-gray-400 mt-0.5">
-                            <span class="font-semibold text-emerald-600">${escapeHtml(item.category)}</span>
+                        ${noteHtml}
+                        <div class="flex gap-2 text-[9px] text-gray-400 mt-0.5 items-center">
+                            <span onclick="cambiaCategoriaArticolo('${item.id}', event)" class="font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 cursor-pointer hover:bg-emerald-100" title="Clicca per cambiare categoria">${escapeHtml(item.category)} ▾</span>
                             ${item.quantity ? `<span>• ${escapeHtml(item.quantity)}</span>` : ''}
                         </div>
                     </div>
