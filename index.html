@@ -75,16 +75,7 @@
                     
                     <div class="flex gap-1.5 items-center">
                         <select id="category-input" class="w-1/3 px-1.5 py-1.5 border border-gray-200 rounded-xl text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="Frutta e Verdura">🥦 Ortofrutta</option>
-                            <option value="Latticini e Uova">🧀 Latticini</option>
-                            <option value="Carne e Pesce">🥩 Carne/Pesce</option>
-                            <option value="Dispensa e Pasta">🍝 Dispensa</option>
-                            <option value="Surgelati">🧊 Surgelati</option>
-                            <option value="Bevande">🧃 Bevande</option>
-                            <option value="Elettronica">⚡ Elettronica</option>
-                            <option value="Igiene e Cura Personale">🧴 Igiene</option>
-                            <option value="Casa e Pulizia">🧹 Casa</option>
-                            <option value="Altro">🛒 Altro</option>
+                            <!-- Popolato dinamicamente -->
                         </select>
 
                         <input type="text" id="quantity-input" placeholder="Qtà (es. 1l)" 
@@ -244,11 +235,29 @@
                     </div>
                 </div>
 
+                <!-- Gestione Categorie Personalizzate -->
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
+                    <label class="font-semibold text-gray-700 block">Gestione Categorie & Icone</label>
+                    <p class="text-[10px] text-gray-500 mb-1">Aggiungi nuove categorie con le relative icone FontAwesome (es. <code>fa-solid fa-snowflake</code> per i surgelati).</p>
+                    
+                    <div class="space-y-1.5 mb-2" id="categories-settings-container">
+                        <!-- Elenco categorie dinamico -->
+                    </div>
+
+                    <div class="flex gap-1.5 pt-1">
+                        <input type="text" id="new-cat-name" placeholder="Nome Categoria" class="w-1/2 px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-[11px]">
+                        <input type="text" id="new-cat-icon" placeholder="Icona (es. fa-snowflake)" class="w-1/2 px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-[11px]">
+                    </div>
+                    <button onclick="aggiungiNuovaCategoria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition text-[11px] mt-1">
+                        + Aggiungi Categoria
+                    </button>
+                </div>
+
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                     <label class="font-semibold text-gray-700 block">Stanza Corrente</label>
                     <p class="text-gray-500 mb-1">In uso: <strong id="settings-room-label">famiglia</strong></p>
                     <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-1.5 rounded-lg font-medium transition">
-                        Cambia Stanza (es. famiglia)
+                        Cambia Stanza (es. personal-damy)
                     </button>
                 </div>
 
@@ -259,6 +268,17 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- MODALE SELEZIONE CATEGORIA RAPIDA (TENDINA A SCELTA) -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-4 space-y-3 shadow-xl text-center">
+            <h3 class="text-xs font-bold text-gray-800"><i class="fa-solid fa-list text-emerald-600"></i> Seleziona Categoria</h3>
+            <div id="modal-categories-list" class="space-y-1.5 max-h-60 overflow-y-auto">
+                <!-- Voci generate dinamicamente -->
+            </div>
+            <button onclick="chiudiModaleCategoria()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 rounded-xl text-xs font-medium transition mt-2">Annulla</button>
         </div>
     </div>
 
@@ -340,10 +360,25 @@
         let currentItems = [];
         let currentCosts = [];
         let currentCards = [];
+        let currentCategories = [];
         let html5QrCode = null;
         let base64FotoTemp = '';
+        let itemIdDaModificare = null;
 
         document.getElementById('cost-date').valueAsDate = new Date();
+
+        const defaultInitialCategories = [
+            { name: "Frutta e Verdura", icon: "fa-carrot" },
+            { name: "Latticini e Uova", icon: "fa-cheese" },
+            { name: "Carne e Pesce", icon: "fa-fish" },
+            { name: "Dispensa e Pasta", icon: "fa-wheat-awn" },
+            { name: "Surgelati", icon: "fa-snowflake" },
+            { name: "Bevande", icon: "fa-bottle-droplet" },
+            { name: "Elettronica", icon: "fa-bolt" },
+            { name: "Igiene e Cura Personale", icon: "fa-pump-soap" },
+            { name: "Casa e Pulizia", icon: "fa-broom" },
+            { name: "Altro", icon: "fa-cart-shopping" }
+        ];
 
         const defaultInitialItems = [
             { text: "Broccoli surgelati", category: "Surgelati", note: "" },
@@ -356,12 +391,6 @@
             { text: "Uova", category: "Latticini e Uova", note: "" },
             { text: "Acqua", category: "Bevande", note: "" },
             { text: "Carta igienica", category: "Casa e Pulizia", note: "" }
-        ];
-
-        const categorieDisponibili = [
-            "Frutta e Verdura", "Latticini e Uova", "Carne e Pesce", 
-            "Dispensa e Pasta", "Surgelati", "Bevande", 
-            "Elettronica", "Igiene e Cura Personale", "Casa e Pulizia", "Altro"
         ];
 
         function switchTab(tabId) {
@@ -391,6 +420,7 @@
                     currentItems = data.articoli || [];
                     currentCosts = data.costi || [];
                     currentCards = data.carte || [];
+                    currentCategories = data.categorie || defaultInitialCategories;
                 } else {
                     inizializzaListaDefault(docRef);
                 }
@@ -412,11 +442,17 @@
             }));
             currentCosts = [];
             currentCards = [];
-            docRef.set({ articoli: currentItems, costi: currentCosts, carte: currentCards });
+            currentCategories = defaultInitialCategories;
+            docRef.set({ 
+                articoli: currentItems, 
+                costi: currentCosts, 
+                carte: currentCards, 
+                categorie: currentCategories 
+            });
         }
 
         window.ricaricaListaIniziale = function() {
-            if (confirm("Vuoi ripristinare tutti i prodotti iniziali nella lista?")) {
+            if (confirm("Vuoi ripristinare tutti i prodotti e categorie iniziali?")) {
                 const docRef = db.collection("liste").doc(roomId);
                 inizializzaListaDefault(docRef);
             }
@@ -427,7 +463,8 @@
                 await db.collection("liste").doc(roomId).set({ 
                     articoli: currentItems,
                     costi: currentCosts,
-                    carte: currentCards 
+                    carte: currentCards,
+                    categorie: currentCategories
                 }, { merge: true });
             } catch (e) {
                 console.error("Errore salvataggio cloud: ", e);
@@ -511,26 +548,86 @@
             input.focus();
         });
 
-        window.cambiaCategoriaArticolo = function(id, event) {
+        // Apertura tendina a scelta rapida (senza digitazione)
+        window.apriModaleCategoria = function(id, event) {
             event.stopPropagation();
-            const item = currentItems.find(i => i.id === id);
-            if (!item) return;
+            itemIdDaModificare = id;
+            const container = document.getElementById('modal-categories-list');
+            container.innerHTML = '';
 
-            let promptMsg = "Scegli la nuova categoria:\n";
-            categorieDisponibili.forEach((cat, idx) => {
-                promptMsg += `${idx + 1}. ${cat}\n`;
+            currentCategories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left px-3 py-2 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl text-xs font-medium border border-gray-100 flex items-center gap-2 transition";
+                btn.innerHTML = `<i class="fa-solid ${cat.icon} text-emerald-600"></i> ${escapeHtml(cat.name)}`;
+                btn.onclick = () => {
+                    selezionaNuovaCategoria(cat.name);
+                };
+                container.appendChild(btn);
             });
 
-            const scelta = prompt(promptMsg + "\nDigita il nome esatto della categoria:");
-            if (scelta) {
-                const trovata = categorieDisponibili.find(c => c.toLowerCase() === scelta.trim().toLowerCase());
-                if (trovata) {
-                    item.category = trovata;
-                    salvaSulCloud();
-                } else {
-                    alert("Categoria non valida.");
-                }
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+
+        window.chiudiModaleCategoria = function() {
+            document.getElementById('category-modal').classList.add('hidden');
+            itemIdDaModificare = null;
+        }
+
+        window.selezionaNuovaCategoria = function(nomeCategoria) {
+            if (!itemIdDaModificare) return;
+            const item = currentItems.find(i => i.id === itemIdDaModificare);
+            if (item) {
+                item.category = nomeCategoria;
+                salvaSulCloud();
             }
+            chiudiModaleCategoria();
+        }
+
+        window.aggiungiNuovaCategoria = function() {
+            const nameInput = document.getElementById('new-cat-name');
+            const iconInput = document.getElementById('new-cat-icon');
+            const name = nameInput.value.trim();
+            let icon = iconInput.value.trim() || "fa-tag";
+
+            if (!name) {
+                alert("Inserisci un nome per la categoria.");
+                return;
+            }
+
+            if (!icon.startsWith('fa-')) {
+                icon = 'fa-' + icon;
+            }
+
+            if (currentCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                alert("Questa categoria esiste già.");
+                return;
+            }
+
+            currentCategories.push({ name, icon });
+            salvaSulCloud();
+
+            nameInput.value = '';
+            iconInput.value = '';
+            renderCategoriesSettings();
+            popolaSelectCategorie();
+        }
+
+        window.eliminaCategoria = function(index) {
+            if (currentCategories.length <= 1) {
+                alert("Devi mantenere almeno una categoria.");
+                return;
+            }
+            const catRimossa = currentCategories[index].name;
+            currentCategories.splice(index, 1);
+
+            currentItems.forEach(item => {
+                if (item.category === catRimossa) {
+                    item.category = currentCategories[0].name;
+                }
+            });
+
+            salvaSulCloud();
+            renderAll();
         }
 
         window.apriModaleImport = function() {
@@ -582,11 +679,12 @@
                 return;
             }
 
+            const defaultCat = currentCategories[0] ? currentCategories[0].name : "Altro";
             righeTrovate.forEach((riga, index) => {
                 currentItems.unshift({
                     id: 'import-' + Date.now() + '-' + index,
                     text: riga,
-                    category: 'Dispensa e Pasta',
+                    category: defaultCat,
                     quantity: '',
                     note: '',
                     photo: '',
@@ -598,7 +696,6 @@
             chiudiModaleImport();
         }
 
-        // Form Costi con ricalcolo esatto basato sull'arrotondamento dei buoni pasto
         document.getElementById('cost-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const dateInput = document.getElementById('cost-date').value;
@@ -607,11 +704,9 @@
 
             if (!dateInput || isNaN(amountInput)) return;
 
-            // Calcolo preciso: stimiamo quanti soldi sono coperti dai buoni in base ai contanti indicativi immessi
             const coveredByVouchers = Math.max(0, amountInput - cashInputIndicativo);
             const vouchersUsed = Math.round(coveredByVouchers / voucherValue);
 
-            // Ricalcoliamo i contanti effettivi in base al numero intero di buoni pasto applicati
             const valoreTotaleBuoni = vouchersUsed * voucherValue;
             const cashEffettivo = Math.max(0, amountInput - valoreTotaleBuoni);
 
@@ -721,10 +816,10 @@
         }
 
         window.cambiaStanza = function() {
-            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal):", roomId);
+            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal-damy):", roomId);
             if (nuovaStanza && nuovaStanza.trim() !== "") {
                 roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
-                localStorage.setItem('shopping_room_id', roomId);
+                localStorage.setItem('shopping_room_id', roomId)[cite: 1];
                 document.getElementById('current-room-label').innerText = roomId;
                 document.getElementById('settings-room-label').innerText = roomId;
                 connettiAlDB();
@@ -732,10 +827,46 @@
         }
 
         function renderAll() {
+            popolaSelectCategorie();
+            renderCategoriesSettings();
             renderItems();
             renderBought();
             renderCosts();
             renderCards();
+        }
+
+        function popolaSelectCategorie() {
+            const select = document.getElementById('category-input');
+            const valCorrente = select.value;
+            select.innerHTML = '';
+            currentCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.innerText = cat.name;
+                select.appendChild(opt);
+            });
+            if (valCorrente && Array.from(select.options).some(o => o.value === valCorrente)) {
+                select.value = valCorrente;
+            }
+        }
+
+        function renderCategoriesSettings() {
+            const container = document.getElementById('categories-settings-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            currentCategories.forEach((cat, index) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-white p-1.5 rounded-lg border border-gray-200 text-[11px]";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${cat.icon} text-emerald-600"></i>
+                        <span class="font-medium text-gray-700">${escapeHtml(cat.name)}</span>
+                    </div>
+                    <button onclick="eliminaCategoria(${index})" class="text-gray-300 hover:text-red-500 px-1.5 py-0.5"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function renderItems() {
@@ -790,6 +921,9 @@
             const photoHtml = item.photo ? `<img src="${item.photo}" class="w-10 h-10 object-cover rounded-lg mr-2 shrink-0 border border-gray-200 shadow-sm">` : '';
             const noteHtml = item.note ? `<span class="text-gray-500 italic block text-[9px]">Nota: ${escapeHtml(item.note)}</span>` : '';
 
+            const catObj = currentCategories.find(c => c.name === item.category);
+            const iconClass = catObj ? catObj.icon : 'fa-tag';
+
             div.innerHTML = `
                 <div class="flex items-center gap-2 flex-1 cursor-pointer overflow-hidden" onclick="toggleItem('${item.id}')">
                     <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
@@ -802,7 +936,9 @@
                         <p class="text-xs font-medium text-gray-800 truncate ${item.bought ? 'line-through text-gray-400' : ''}">${escapeHtml(item.text)}</p>
                         ${noteHtml}
                         <div class="flex gap-2 text-[9px] text-gray-400 mt-0.5 items-center">
-                            <span onclick="cambiaCategoriaArticolo('${item.id}', event)" class="font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 cursor-pointer hover:bg-emerald-100" title="Clicca per cambiare categoria">${escapeHtml(item.category)} ▾</span>
+                            <span onclick="apriModaleCategoria('${item.id}', event)" class="font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 cursor-pointer hover:bg-emerald-100 flex items-center gap-1" title="Clicca per cambiare categoria">
+                                <i class="fa-solid ${iconClass}"></i> ${escapeHtml(item.category)} ▾
+                            </span>
                             ${item.quantity ? `<span>• ${escapeHtml(item.quantity)}</span>` : ''}
                         </div>
                     </div>
