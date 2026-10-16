@@ -248,7 +248,7 @@
                     <label class="font-semibold text-gray-700 block">Stanza Corrente</label>
                     <p class="text-gray-500 mb-1">In uso: <strong id="settings-room-label">famiglia</strong></p>
                     <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-1.5 rounded-lg font-medium transition">
-                        Cambia Stanza (es. personal-damy)
+                        Cambia Stanza (es. famiglia)
                     </button>
                 </div>
 
@@ -721,7 +721,7 @@
         }
 
         window.cambiaStanza = function() {
-            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal-damy):", roomId);
+            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal):", roomId);
             if (nuovaStanza && nuovaStanza.trim() !== "") {
                 roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
                 localStorage.setItem('shopping_room_id', roomId);
