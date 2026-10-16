@@ -49,20 +49,21 @@
             <!-- TAB 1: DA COMPRARE -->
             <div id="tab-da-comprare" class="tab-content flex flex-col h-full overflow-hidden">
                 
-                <!-- Azioni Rapide (Importa Lista) -->
-                <div class="mb-3 flex justify-between items-center bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-xs shrink-0">
-                    <span class="text-emerald-800 font-medium text-[11px]">Vuoi importare una lista?</span>
-                    <button onclick="apriModaleImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]">
-                        <i class="fa-solid fa-file-arrow-down mr-1"></i> Importa
+                <!-- Azione Rapida / Toggle Categorie -->
+                <div class="mb-2 flex justify-between items-center bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-xs shrink-0">
+                    <span id="foto-attiva-avviso" class="text-emerald-800 font-medium text-[10px] hidden"><i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Foto pronta: clicca un articolo per associarla!</span>
+                    <span id="foto-attiva-testo" class="text-emerald-800 font-medium text-[11px]">Modalità visualizzazione:</span>
+                    <button onclick="toggleVisualizzazioneCategorie()" id="btn-toggle-cat" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]">
+                        <i class="fa-solid fa-bookmark mr-1"></i> Divisi per Categorie
                     </button>
                 </div>
 
-                <!-- Form per Aggiungere Articoli -->
+                <!-- Form per Cerca / Aggiungi Articoli -->
                 <form id="add-form" class="space-y-2 mb-3 shrink-0">
                     <div class="flex gap-2">
-                        <input type="text" id="item-input" placeholder="Cosa serve? (es. Latte)" required
+                        <input type="text" id="item-input" placeholder="Cerca o scrivi nuovo (es. Latte)..." required oninput="filtraLista(this.value)"
                             class="flex-1 px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-medium transition shadow-md flex items-center justify-center">
+                        <button type="submit" title="Aggiungi nuovo" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-medium transition shadow-md flex items-center justify-center">
                             <i class="fa-solid fa-plus text-xs"></i>
                         </button>
                     </div>
@@ -222,10 +223,23 @@
             </div>
 
             <!-- TAB 5: IMPOSTAZIONI -->
-            <div id="tab-impostazioni" class="tab-content hidden space-y-3 text-xs">
+            <div id="tab-impostazioni" class="tab-content hidden space-y-3 text-xs overflow-y-auto scrollable-container pr-1">
                 <h2 class="text-xs font-bold text-gray-700 flex items-center gap-2">
                     <i class="fa-solid fa-gear text-emerald-600"></i> Impostazioni App
                 </h2>
+
+                <!-- Importa Lista Rapida -->
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
+                    <label class="font-semibold text-gray-700 block"><i class="fa-solid fa-file-arrow-down text-emerald-600"></i> Importa Lista Rapida</label>
+                    <p class="text-[10px] text-gray-500">Incolla qui sotto il testo o carica un file PDF/testo per aggiungere più articoli.</p>
+                    <textarea id="import-text" rows="3" placeholder="Latte&#10;Pane&#10;Mele" class="w-full p-2 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    <div>
+                        <input type="file" id="import-file" accept=".pdf,.txt" class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700">
+                    </div>
+                    <button onclick="eseguiImportazione()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition text-xs shadow-sm">
+                        Importa Articoli
+                    </button>
+                </div>
 
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                     <label class="font-semibold text-gray-700 block">Valore singolo Buono Pasto (€)</label>
@@ -238,9 +252,10 @@
                 <!-- Gestione Categorie Personalizzate -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                     <label class="font-semibold text-gray-700 block">Gestione Categorie & Icone</label>
-                    <p class="text-[10px] text-gray-500 mb-1">Aggiungi nuove categorie con le relative icone FontAwesome (es. <code>fa-solid fa-snowflake</code> per i surgelati).</p>
+                    <p class="text-[10px] text-gray-500 mb-1">Aggiungi nuove categorie con le relative icone FontAwesome (es. <code>fa-snowflake</code>).</p>
                     
-                    <div class="space-y-1.5 mb-2" id="categories-settings-container">
+                    <!-- Box con scorrimento per non coprire altri campi -->
+                    <div class="space-y-1.5 mb-2 max-h-36 overflow-y-auto pr-1 border border-gray-200 rounded-lg p-1.5 bg-white" id="categories-settings-container">
                         <!-- Elenco categorie dinamico -->
                     </div>
 
@@ -261,7 +276,7 @@
                     </button>
                 </div>
 
-                <div class="pt-2 text-center">
+                <div class="pt-2 text-center pb-2">
                     <button onclick="ricaricaListaIniziale()" class="text-emerald-600 hover:text-emerald-800 font-medium transition underline">
                         Ripristina prodotti iniziali
                     </button>
@@ -279,27 +294,6 @@
                 <!-- Voci generate dinamicamente -->
             </div>
             <button onclick="chiudiModaleCategoria()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 rounded-xl text-xs font-medium transition mt-2">Annulla</button>
-        </div>
-    </div>
-
-    <!-- MODALE IMPORTAZIONE RAPIDA -->
-    <div id="import-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-4 space-y-3 shadow-xl">
-            <h3 class="text-xs font-bold text-gray-800 flex items-center gap-2">
-                <i class="fa-solid fa-file-arrow-down text-emerald-600"></i> Importa Lista Rapida
-            </h3>
-            <p class="text-[11px] text-gray-500">Incolla qui sotto il testo o carica un file PDF/testo.</p>
-            
-            <textarea id="import-text" rows="4" placeholder="Latte&#10;Pane&#10;Mele" class="w-full p-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-
-            <div>
-                <input type="file" id="import-file" accept=".pdf,.txt" class="w-full text-[11px] text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-50 file:text-emerald-700">
-            </div>
-
-            <div class="flex gap-2 pt-1">
-                <button onclick="chiudiModaleImport()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 rounded-xl text-xs font-medium transition">Annulla</button>
-                <button onclick="eseguiImportazione()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-xl text-xs font-medium transition shadow-sm">Importa</button>
-            </div>
         </div>
     </div>
 
@@ -356,6 +350,8 @@
         let voucherValue = parseFloat(localStorage.getItem('voucher_value')) || 8.0;
         document.getElementById('voucher-value-input').value = voucherValue;
 
+        let groupByCategories = localStorage.getItem('group_by_categories') === 'true';
+
         let unsubscribe = null;
         let currentItems = [];
         let currentCosts = [];
@@ -364,6 +360,7 @@
         let html5QrCode = null;
         let base64FotoTemp = '';
         let itemIdDaModificare = null;
+        let filtroRicercaTesto = '';
 
         document.getElementById('cost-date').valueAsDate = new Date();
 
@@ -471,6 +468,24 @@
             }
         }
 
+        window.toggleVisualizzazioneCategorie = function() {
+            groupByCategories = !groupByCategories;
+            localStorage.setItem('group_by_categories', groupByCategories);
+            aggiornaStatoPulsanteToggle();
+            renderItems();
+        }
+
+        function aggiornaStatoPulsanteToggle() {
+            const btn = document.getElementById('btn-toggle-cat');
+            if (groupByCategories) {
+                btn.innerHTML = `<i class="fa-solid fa-list mr-1"></i> Lista Semplice`;
+                btn.className = "bg-teal-700 hover:bg-teal-800 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-bookmark mr-1"></i> Divisi per Categorie`;
+                btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+            }
+        }
+
         window.anteprimaFoto = function(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -506,6 +521,8 @@
 
                         document.getElementById('img-preview').src = base64FotoTemp;
                         document.getElementById('preview-container').classList.remove('hidden');
+                        document.getElementById('foto-attiva-avviso').classList.remove('hidden');
+                        document.getElementById('foto-attiva-testo').classList.add('hidden');
                     }
                     img.src = e.target.result;
                 }
@@ -516,6 +533,13 @@
         window.rimuoviFoto = function() {
             base64FotoTemp = '';
             document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('foto-attiva-avviso').classList.add('hidden');
+            document.getElementById('foto-attiva-testo').classList.remove('hidden');
+        }
+
+        window.filtraLista = function(valore) {
+            filtroRicercaTesto = valore.trim().toLowerCase();
+            renderItems();
         }
 
         document.getElementById('add-form').addEventListener('submit', (e) => {
@@ -545,6 +569,7 @@
             noteInput.value = '';
             quantityInput.value = '';
             rimuoviFoto();
+            filtroRicercaTesto = '';
             input.focus();
         });
 
@@ -629,16 +654,6 @@
             renderAll();
         }
 
-        window.apriModaleImport = function() {
-            document.getElementById('import-text').value = '';
-            document.getElementById('import-file').value = '';
-            document.getElementById('import-modal').classList.remove('hidden');
-        }
-
-        window.chiudiModaleImport = function() {
-            document.getElementById('import-modal').classList.add('hidden');
-        }
-
         window.eseguiImportazione = async function() {
             const textContent = document.getElementById('import-text').value.trim();
             const fileInput = document.getElementById('import-file').files[0];
@@ -692,7 +707,9 @@
             });
 
             await salvaSulCloud();
-            chiudiModaleImport();
+            document.getElementById('import-text').value = '';
+            document.getElementById('import-file').value = '';
+            alert("Articoli importati con successo!");
         }
 
         document.getElementById('cost-form').addEventListener('submit', (e) => {
@@ -780,12 +797,19 @@
         }
 
         window.toggleItem = function(id) {
-            currentItems = currentItems.map(item => {
-                if (item.id === id) {
-                    return { ...item, bought: !item.bought };
-                }
-                return item;
-            });
+            const item = currentItems.find(i => i.id === id);
+            if (!item) return;
+
+            // Se abbiamo una foto pronta in memoria e clicchiamo su un elemento, associamo la foto
+            if (base64FotoTemp) {
+                item.photo = base64FotoTemp;
+                rimuoviFoto();
+                salvaSulCloud();
+                return;
+            }
+
+            // Altrimenti cambia lo stato (comprato / da comprare)
+            item.bought = !item.bought;
             salvaSulCloud();
         }
 
@@ -828,6 +852,7 @@
         function renderAll() {
             popolaSelectCategorie();
             renderCategoriesSettings();
+            aggiornaStatoPulsanteToggle();
             renderItems();
             renderBought();
             renderCosts();
@@ -857,7 +882,7 @@
 
             currentCategories.forEach((cat, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between bg-white p-1.5 rounded-lg border border-gray-200 text-[11px]";
+                div.className = "flex items-center justify-between bg-gray-50 p-1.5 rounded-lg border border-gray-200 text-[11px]";
                 div.innerHTML = `
                     <div class="flex items-center gap-2">
                         <i class="fa-solid ${cat.icon} text-emerald-600"></i>
@@ -876,24 +901,43 @@
 
             let toBuy = currentItems.filter(item => !item.bought);
 
-            toBuy.sort((a, b) => {
-                if (a.category !== b.category) {
-                    return a.category.localeCompare(b.category);
-                }
-                return a.text.localeCompare(b.text);
-            });
+            // Filtro ricerca testuale
+            if (filtroRicercaTesto) {
+                toBuy = toBuy.filter(item => item.text.toLowerCase().includes(filtroRicercaTesto));
+            }
 
             if (toBuy.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-gray-400 text-xs">
                         <i class="fa-regular fa-face-smile text-2xl mb-1 block text-emerald-400"></i>
-                        La lista da comprare è vuota!
+                        Nessun articolo trovato!
                     </div>`;
+                updateProgress(currentItems.filter(i => i.bought).length, currentItems.length);
+                return;
             }
 
-            toBuy.forEach(item => {
-                container.appendChild(createItemElement(item));
-            });
+            if (groupByCategories) {
+                // Raggruppamento per categoria (segnalibri)
+                currentCategories.forEach(cat => {
+                    const itemsInCat = toBuy.filter(item => item.category === cat.name);
+                    if (itemsInCat.length > 0) {
+                        const catHeader = document.createElement('div');
+                        catHeader.className = "bg-emerald-100 text-emerald-900 font-bold text-[10px] px-2.5 py-1 rounded-lg mt-2 mb-1 flex items-center gap-1.5 uppercase tracking-wider";
+                        catHeader.innerHTML = `<i class="fa-solid ${cat.icon}"></i> ${escapeHtml(cat.name)}`;
+                        container.appendChild(catHeader);
+
+                        itemsInCat.forEach(item => {
+                            container.appendChild(createItemElement(item));
+                        });
+                    }
+                });
+            } else {
+                // Lista semplice ordinata alfabetica
+                toBuy.sort((a, b) => a.text.localeCompare(b.text));
+                toBuy.forEach(item => {
+                    container.appendChild(createItemElement(item));
+                });
+            }
 
             updateProgress(currentItems.filter(i => i.bought).length, currentItems.length);
         }
