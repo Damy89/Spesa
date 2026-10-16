@@ -161,7 +161,7 @@
                     </div>
                 </div>
 
-                <!-- BARRA SEGNALIBRI LATERALE (STILE RACCOGLITORE AD ANELLI) -->
+                <!-- BARRA SEGNALIBRI LATERALE -->
                 <div id="category-side-tabs" class="tab-index-bar hidden">
                     <!-- Generate dinamicamente -->
                 </div>
@@ -230,38 +230,71 @@
             </div>
 
             <!-- TAB 4: CARTE FEDELTÀ -->
-            <div id="tab-carte" class="tab-content hidden flex flex-col h-full overflow-y-auto scrollable-container pr-1 space-y-3">
-                <h2 class="text-xs font-bold text-gray-700 flex items-center gap-2">
-                    <i class="fa-solid fa-id-card text-emerald-600"></i> Carte Fedeltà (Condivise)
-                </h2>
+            <div id="tab-carte" class="tab-content hidden flex flex-col h-full overflow-hidden space-y-3">
+                <div class="flex justify-between items-center shrink-0">
+                    <h2 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-emerald-600"></i> Carte Fedeltà (Condivise)
+                    </h2>
+                </div>
 
-                <div id="reader-container" class="hidden bg-gray-900 rounded-xl overflow-hidden p-2 text-center">
+                <!-- Barra di Ricerca Carte -->
+                <div class="shrink-0">
+                    <input type="text" id="card-search-input" placeholder="🔍 Cerca carta (es. Esselunga, IKEA...)" oninput="filtraCarte(this.value)"
+                        class="w-full px-3 py-1.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs bg-gray-50">
+                </div>
+
+                <div id="reader-container" class="hidden bg-gray-900 rounded-xl overflow-hidden p-2 text-center shrink-0">
                     <div id="reader" class="w-full"></div>
                     <button onclick="stopCamera()" class="mt-2 bg-red-600 text-white px-3 py-1 rounded text-xs font-bold">
                         Chiudi Fotocamera
                     </button>
                 </div>
 
-                <form id="card-form" class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-2 text-xs">
-                    <input type="text" id="card-name" placeholder="Nome Negozio (es. Esselunga)" required class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <form id="card-form" class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-2 text-xs shrink-0">
+                    <!-- Selettore Negozio con Loghi/Icone Originali -->
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <select id="card-brand-select" onchange="selezionaBrandCarta(this.value)" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- Scegli Marchio --</option>
+                            <option value="Esselunga|fa-solid fa-carrot|#cc0000">Esselunga</option>
+                            <option value="Conad|fa-solid fa-basket-shopping|#da291c">Conad</option>
+                            <option value="Coop|fa-solid fa-heart|#ed1c24">Coop</option>
+                            <option value="Lidl|fa-solid fa-store|#0050aa">Lidl</option>
+                            <option value="Eurospin|fa-solid fa-tag|#0054a6">Eurospin</option>
+                            <option value="Carrefour|fa-solid fa-cart-flatbed|#004e92">Carrefour</option>
+                            <option value="IKEA|fa-solid fa-couch|#0051ba">IKEA</option>
+                            <option value="Decathlon|fa-solid fa-person-running|#0082c3">Decathlon</option>
+                            <option value="MediaWorld|fa-solid fa-laptop|#e4002b">MediaWorld</option>
+                            <option value="Unieuro|fa-solid fa-tv|#003399">Unieuro</option>
+                            <option value="Toys Center|fa-solid fa-gamepad|#ffcc00">Toys Center</option>
+                            <option value="Sephora|fa-solid fa-spray-can|#000000">Sephora</option>
+                            <option value="Eni Station|fa-solid fa-gas-pump|#ffcc00">Eni Station</option>
+                            <option value="Q8|fa-solid fa-fire-flame-simple|#e31b23">Q8</option>
+                            <option value="Altro|fa-solid fa-id-card|#10b981">Altro Negozio</option>
+                        </select>
+                        <input type="text" id="card-name" placeholder="Nome Negozio" required class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
                     
                     <div class="flex gap-1.5">
                         <select id="card-type" class="w-1/3 px-1.5 py-1.5 border border-gray-200 rounded-lg text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <option value="barcode">Barcode</option>
                             <option value="qrcode">QR Code</option>
                         </select>
-                        <input type="text" id="card-number" placeholder="Numero" required class="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="card-number" placeholder="Numero carta" required class="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <button type="button" onclick="startCamera()" class="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1.5 rounded-lg font-medium transition flex items-center shrink-0">
                             <i class="fa-solid fa-camera"></i>
                         </button>
                     </div>
+
+                    <!-- Campi nascosti per icona e colore brand -->
+                    <input type="hidden" id="card-icon" value="fa-id-card">
+                    <input type="hidden" id="card-color" value="#10b981">
 
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition shadow-sm text-xs">
                         Salva Carta nel Cloud
                     </button>
                 </form>
 
-                <div id="cards-container" class="space-y-2">
+                <div id="cards-container" class="space-y-2 flex-1 overflow-y-auto scrollable-container pr-1">
                     <!-- Carte salvate condivise -->
                 </div>
             </div>
@@ -411,6 +444,7 @@
         let base64FotoTemp = '';
         let itemIdDaModificare = null;
         let filtroRicercaTesto = '';
+        let filtroRicercaCarte = '';
         let selectedIcon = "fa-tag";
 
         const iconCatalogList = [
@@ -629,6 +663,27 @@
             renderItems();
         }
 
+        window.filtraCarte = function(valore) {
+            filtroRicercaCarte = valore.trim().toLowerCase();
+            renderCards();
+        }
+
+        window.selezionaBrandCarta = function(valore) {
+            if(!valore) return;
+            const parti = valore.split('|');
+            const nome = parti[0];
+            const icona = parti[1];
+            const colore = parti[2];
+
+            if(nome !== "Altro") {
+                document.getElementById('card-name').value = nome;
+            } else {
+                document.getElementById('card-name').value = "";
+            }
+            document.getElementById('card-icon').value = icona;
+            document.getElementById('card-color').value = colore;
+        }
+
         document.getElementById('add-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const input = document.getElementById('item-input');
@@ -845,14 +900,19 @@
             const name = document.getElementById('card-name').value.trim();
             const number = document.getElementById('card-number').value.trim();
             const type = document.getElementById('card-type').value;
+            const icon = document.getElementById('card-icon').value;
+            const color = document.getElementById('card-color').value;
 
             if(!name || !number) return;
 
-            currentCards.push({ id: 'card-' + Date.now(), name, number, type });
+            currentCards.push({ id: 'card-' + Date.now(), name, number, type, icon, color });
             salvaSulCloud();
 
             document.getElementById('card-name').value = '';
             document.getElementById('card-number').value = '';
+            document.getElementById('card-brand-select').selectedIndex = 0;
+            document.getElementById('card-icon').value = 'fa-id-card';
+            document.getElementById('card-color').value = '#10b981';
         });
 
         window.startCamera = function() {
@@ -1028,7 +1088,6 @@
                         const color = categoryColors[idx % categoryColors.length];
                         const safeCatId = 'cat-header-' + cat.name.replace(/\s+/g, '-');
 
-                        // Header Categoria nella Lista
                         const catHeader = document.createElement('div');
                         catHeader.id = safeCatId;
                         catHeader.style.backgroundColor = color;
@@ -1040,7 +1099,6 @@
                             container.appendChild(createItemElement(item));
                         });
 
-                        // Linguetta Laterale (Stile Separatore Ad Anelli)
                         const tabBtn = document.createElement('div');
                         tabBtn.className = "tab-index-item";
                         tabBtn.style.backgroundColor = color;
@@ -1170,12 +1228,20 @@
             if(!container) return;
             container.innerHTML = '';
 
-            if(currentCards.length === 0) {
-                container.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">Nessuna carta salvata nel cloud.</div>`;
+            let carteFiltrate = currentCards;
+            if (filtroRicercaCarte) {
+                carteFiltrate = currentCards.filter(card => card.name.toLowerCase().includes(filtroRicercaCarte) || card.number.includes(filtroRicercaCarte));
+            }
+
+            if(carteFiltrate.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">Nessuna carta trovata.</div>`;
                 return;
             }
 
-            currentCards.forEach(card => {
+            carteFiltrate.forEach(card => {
+                const cardIcon = card.icon || 'fa-id-card';
+                const cardColor = card.color || '#10b981';
+
                 const div = document.createElement('div');
                 div.className = "bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-between";
                 
@@ -1185,9 +1251,14 @@
 
                 div.innerHTML = `
                     <div class="w-full flex justify-between items-center mb-1">
-                        <div>
-                            <strong class="font-bold text-emerald-900 text-xs block">${escapeHtml(card.name)}</strong>
-                            <span class="text-[9px] text-gray-400 font-mono">${escapeHtml(card.number)}</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs shadow-sm" style="background-color: ${cardColor};">
+                                <i class="fa-solid ${cardIcon}"></i>
+                            </div>
+                            <div>
+                                <strong class="font-bold text-gray-800 text-xs block">${escapeHtml(card.name)}</strong>
+                                <span class="text-[9px] text-gray-400 font-mono">${escapeHtml(card.number)}</span>
+                            </div>
                         </div>
                         <button onclick="deleteCard('${card.id}')" class="text-gray-300 hover:text-red-500 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
                     </div>
