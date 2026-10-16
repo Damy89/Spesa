@@ -28,40 +28,79 @@
             overscroll-behavior-y: contain;
             -webkit-overflow-scrolling: touch;
         }
+        /* Stile linguette laterali a registro/separatore */
+        .tab-index-bar {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            z-index: 40;
+        }
+        .tab-index-item {
+            width: 28px;
+            height: 32px;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            box-shadow: -2px 2px 4px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .tab-index-item:active {
+            transform: scale(1.1);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-emerald-50 to-teal-100 h-full flex flex-col justify-between p-3 max-w-md mx-auto">
+<body class="bg-gradient-to-br from-emerald-50 to-teal-100 h-full flex flex-col justify-between p-3 max-w-md mx-auto relative">
 
     <!-- Card Principale dell'App -->
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-full max-h-[calc(100vh-4.5rem)]">
+    <div id="main-app-card" class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-full max-h-[calc(100vh-4.5rem)] relative">
         
         <!-- Header Fisso -->
-        <div class="bg-emerald-600 p-4 text-white text-center shrink-0">
+        <div id="app-header" class="bg-emerald-600 p-4 text-white text-center shrink-0 transition-all duration-300">
             <h1 class="text-lg font-bold flex items-center justify-center gap-2">
                 <i class="fa-solid fa-basket-shopping"></i> Spesa Condivisa
             </h1>
             <p class="text-emerald-100 text-[11px] mt-0.5">Stanza: <strong id="current-room-label">famiglia</strong></p>
         </div>
 
+        <!-- Pulsante Uscita Fullscreen (visibile solo a tutto schermo) -->
+        <button id="btn-exit-fullscreen" onclick="toggleFullScreen()" class="hidden absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white z-50 px-2.5 py-1 rounded-xl text-xs font-bold shadow-lg flex items-center gap-1">
+            <i class="fa-solid fa-compress"></i> Esci
+        </button>
+
         <!-- CONTENUTO DELLE SCHEDE (PAGES) -->
-        <div class="p-4 flex-1 overflow-hidden flex flex-col">
+        <div class="p-4 flex-1 overflow-hidden flex flex-col relative">
 
             <!-- TAB 1: DA COMPRARE -->
-            <div id="tab-da-comprare" class="tab-content flex flex-col h-full overflow-hidden">
+            <div id="tab-da-comprare" class="tab-content flex flex-col h-full overflow-hidden relative">
                 
-                <!-- Azione Rapida / Toggle Categorie -->
+                <!-- Azione Rapida / Toggle Categorie e Fullscreen -->
                 <div class="mb-2 flex justify-between items-center bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-xs shrink-0">
-                    <span id="foto-attiva-avviso" class="text-emerald-800 font-medium text-[10px] hidden"><i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Foto pronta: clicca un articolo per associarla!</span>
-                    <span id="foto-attiva-testo" class="text-emerald-800 font-medium text-[11px]">Modalità visualizzazione:</span>
-                    <button onclick="toggleVisualizzazioneCategorie()" id="btn-toggle-cat" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Divisi per Categorie
-                    </button>
+                    <span id="foto-attiva-avviso" class="text-emerald-800 font-medium text-[10px] hidden"><i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Foto pronta: clicca un articolo!</span>
+                    <span id="foto-attiva-testo" class="text-emerald-800 font-medium text-[11px]">Vista:</span>
+                    
+                    <div class="flex gap-1.5 items-center">
+                        <button onclick="toggleVisualizzazioneCategorie()" id="btn-toggle-cat" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg font-medium transition shadow-sm text-[11px]">
+                            <i class="fa-solid fa-bookmark mr-1"></i> Segnalibri
+                        </button>
+                        <button onclick="toggleFullScreen()" title="Schermo Intero" class="bg-teal-700 hover:bg-teal-800 text-white p-1.5 rounded-lg transition shadow-sm text-xs">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Form per Cerca / Aggiungi Articoli -->
                 <form id="add-form" class="space-y-2 mb-3 shrink-0">
                     <div class="flex gap-2">
-                        <input type="text" id="item-input" placeholder="Cerca o scrivi nuovo (es. Latte)..." required oninput="filtraLista(this.value)"
+                        <input type="text" id="item-input" placeholder="Cerca o scrivi nuovo..." required oninput="filtraLista(this.value)"
                             class="flex-1 px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
                         <button type="submit" title="Aggiungi nuovo" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-medium transition shadow-md flex items-center justify-center">
                             <i class="fa-solid fa-plus text-xs"></i>
@@ -115,11 +154,16 @@
                 </div>
 
                 <!-- Lista Articoli Da Comprare -->
-                <div class="flex-1 overflow-y-auto scrollable-container pr-1">
+                <div id="list-scroll-container" class="flex-1 overflow-y-auto scrollable-container pr-4 relative">
                     <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Da Comprare</h2>
                     <div id="items-container" class="space-y-2">
                         <div class="text-center py-8 text-gray-400 text-xs">Caricamento lista...</div>
                     </div>
+                </div>
+
+                <!-- BARRA SEGNALIBRI LATERALE (STILE RACCOGLITORE AD ANELLI) -->
+                <div id="category-side-tabs" class="tab-index-bar hidden">
+                    <!-- Generate dinamicamente -->
                 </div>
             </div>
 
@@ -231,7 +275,7 @@
                 <!-- Importa Lista Rapida -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                     <label class="font-semibold text-gray-700 block"><i class="fa-solid fa-file-arrow-down text-emerald-600"></i> Importa Lista Rapida</label>
-                    <p class="text-[10px] text-gray-500">Incolla qui sotto il testo o carica un file PDF/testo per aggiungere più articoli.</p>
+                    <p class="text-[10px] text-gray-500">Incolla il testo o carica un file PDF/testo.</p>
                     <textarea id="import-text" rows="3" placeholder="Latte&#10;Pane&#10;Mele" class="w-full p-2 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                     <div>
                         <input type="file" id="import-file" accept=".pdf,.txt" class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700">
@@ -249,21 +293,26 @@
                     </div>
                 </div>
 
-                <!-- Gestione Categorie Personalizzate -->
+                <!-- Gestione Categorie Personalizzate & Catalogo Icone -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
-                    <label class="font-semibold text-gray-700 block">Gestione Categorie & Icone</label>
-                    <p class="text-[10px] text-gray-500 mb-1">Aggiungi nuove categorie con le relative icone FontAwesome (es. <code>fa-snowflake</code>).</p>
+                    <label class="font-semibold text-gray-700 block">Gestione Categorie & Catalogo Icone</label>
                     
-                    <!-- Box con scorrimento per non coprire altri campi -->
-                    <div class="space-y-1.5 mb-2 max-h-36 overflow-y-auto pr-1 border border-gray-200 rounded-lg p-1.5 bg-white" id="categories-settings-container">
+                    <div class="space-y-1.5 mb-2 max-h-32 overflow-y-auto pr-1 border border-gray-200 rounded-lg p-1.5 bg-white" id="categories-settings-container">
                         <!-- Elenco categorie dinamico -->
                     </div>
 
-                    <div class="flex gap-1.5 pt-1">
-                        <input type="text" id="new-cat-name" placeholder="Nome Categoria" class="w-1/2 px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-[11px]">
-                        <input type="text" id="new-cat-icon" placeholder="Icona (es. fa-snowflake)" class="w-1/2 px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-[11px]">
+                    <div class="space-y-1.5 pt-1">
+                        <input type="text" id="new-cat-name" placeholder="Nome Categoria (es. Detersivi)" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-xs">
+                        
+                        <!-- Catalogo Icone Selezionabili -->
+                        <div>
+                            <span class="text-[10px] text-gray-500 font-medium block mb-1">Scegli un'icona dal catalogo:</span>
+                            <div class="grid grid-cols-6 gap-1.5 bg-white p-2 border border-gray-200 rounded-lg max-h-24 overflow-y-auto" id="icon-catalog">
+                                <!-- Icone dinamiche -->
+                            </div>
+                        </div>
                     </div>
-                    <button onclick="aggiungiNuovaCategoria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition text-[11px] mt-1">
+                    <button onclick="aggiungiNuovaCategoria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition text-xs mt-1">
                         + Aggiungi Categoria
                     </button>
                 </div>
@@ -286,7 +335,7 @@
         </div>
     </div>
 
-    <!-- MODALE SELEZIONE CATEGORIA RAPIDA (TENDINA A SCELTA) -->
+    <!-- MODALE SELEZIONE CATEGORIA RAPIDA -->
     <div id="category-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xs w-full p-4 space-y-3 shadow-xl text-center">
             <h3 class="text-xs font-bold text-gray-800"><i class="fa-solid fa-list text-emerald-600"></i> Seleziona Categoria</h3>
@@ -298,7 +347,7 @@
     </div>
 
     <!-- BOTTOM NAVIGATION BAR -->
-    <div class="bg-white border-t border-gray-200 shadow-lg flex justify-around py-1.5 px-1 z-50 rounded-2xl shrink-0 mt-2">
+    <div id="bottom-nav" class="bg-white border-t border-gray-200 shadow-lg flex justify-around py-1.5 px-1 z-50 rounded-2xl shrink-0 mt-2 transition-all duration-300">
         <button onclick="switchTab('da-comprare')" id="nav-da-comprare" class="flex flex-col items-center flex-1 py-0.5 text-emerald-600 transition">
             <i class="fa-solid fa-cart-shopping text-sm mb-0.5"></i>
             <span class="text-[9px] font-medium">Da Comprare</span>
@@ -351,6 +400,7 @@
         document.getElementById('voucher-value-input').value = voucherValue;
 
         let groupByCategories = localStorage.getItem('group_by_categories') === 'true';
+        let isFullScreen = false;
 
         let unsubscribe = null;
         let currentItems = [];
@@ -361,6 +411,19 @@
         let base64FotoTemp = '';
         let itemIdDaModificare = null;
         let filtroRicercaTesto = '';
+        let selectedIcon = "fa-tag";
+
+        const iconCatalogList = [
+            "fa-carrot", "fa-cheese", "fa-fish", "fa-wheat-awn", "fa-snowflake", 
+            "fa-bottle-droplet", "fa-bolt", "fa-pump-soap", "fa-broom", "fa-cart-shopping",
+            "fa-apple-whole", "fa-drumstick-bite", "fa-cookie", "fa-mug-hot", "fa-wine-bottle",
+            "fa-baby", "fa-paw", "fa-shirt", "fa-pills", "fa-box", "fa-tag"
+        ];
+
+        const categoryColors = [
+            "#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", 
+            "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#64748b"
+        ];
 
         document.getElementById('cost-date').valueAsDate = new Date();
 
@@ -468,6 +531,27 @@
             }
         }
 
+        window.toggleFullScreen = function() {
+            isFullScreen = !isFullScreen;
+            const card = document.getElementById('main-app-card');
+            const header = document.getElementById('app-header');
+            const nav = document.getElementById('bottom-nav');
+            const btnExit = document.getElementById('btn-exit-fullscreen');
+
+            if (isFullScreen) {
+                header.classList.add('hidden');
+                nav.classList.add('hidden');
+                card.classList.remove('max-h-[calc(100vh-4.5rem)]');
+                card.classList.add('max-h-full', 'h-full');
+                btnExit.classList.remove('hidden');
+            } else {
+                header.classList.remove('hidden');
+                nav.classList.remove('hidden');
+                card.classList.add('max-h-[calc(100vh-4.5rem)]');
+                btnExit.classList.add('hidden');
+            }
+        }
+
         window.toggleVisualizzazioneCategorie = function() {
             groupByCategories = !groupByCategories;
             localStorage.setItem('group_by_categories', groupByCategories);
@@ -477,12 +561,15 @@
 
         function aggiornaStatoPulsanteToggle() {
             const btn = document.getElementById('btn-toggle-cat');
+            const sideTabs = document.getElementById('category-side-tabs');
             if (groupByCategories) {
-                btn.innerHTML = `<i class="fa-solid fa-list mr-1"></i> Lista Semplice`;
-                btn.className = "bg-teal-700 hover:bg-teal-800 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+                btn.innerHTML = `<i class="fa-solid fa-list mr-1"></i> Semplice`;
+                btn.className = "bg-teal-700 hover:bg-teal-800 text-white px-2 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+                sideTabs.classList.remove('hidden');
             } else {
-                btn.innerHTML = `<i class="fa-solid fa-bookmark mr-1"></i> Divisi per Categorie`;
-                btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+                btn.innerHTML = `<i class="fa-solid fa-bookmark mr-1"></i> Segnalibri`;
+                btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg font-medium transition shadow-sm text-[11px]";
+                sideTabs.classList.add('hidden');
             }
         }
 
@@ -607,19 +694,31 @@
             chiudiModaleCategoria();
         }
 
+        function renderCatalogoIcone() {
+            const container = document.getElementById('icon-catalog');
+            if(!container) return;
+            container.innerHTML = '';
+
+            iconCatalogList.forEach(iconName => {
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = `p-2 rounded-lg border flex items-center justify-center transition text-sm ${selectedIcon === iconName ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`;
+                btn.innerHTML = `<i class="fa-solid ${iconName}"></i>`;
+                btn.onclick = () => {
+                    selectedIcon = iconName;
+                    renderCatalogoIcone();
+                };
+                container.appendChild(btn);
+            });
+        }
+
         window.aggiungiNuovaCategoria = function() {
             const nameInput = document.getElementById('new-cat-name');
-            const iconInput = document.getElementById('new-cat-icon');
             const name = nameInput.value.trim();
-            let icon = iconInput.value.trim() || "fa-tag";
 
             if (!name) {
                 alert("Inserisci un nome per la categoria.");
                 return;
-            }
-
-            if (!icon.startsWith('fa-')) {
-                icon = 'fa-' + icon;
             }
 
             if (currentCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
@@ -627,11 +726,10 @@
                 return;
             }
 
-            currentCategories.push({ name, icon });
+            currentCategories.push({ name, icon: selectedIcon });
             salvaSulCloud();
 
             nameInput.value = '';
-            iconInput.value = '';
             renderCategoriesSettings();
             popolaSelectCategorie();
         }
@@ -800,7 +898,6 @@
             const item = currentItems.find(i => i.id === id);
             if (!item) return;
 
-            // Se abbiamo una foto pronta in memoria e clicchiamo su un elemento, associamo la foto
             if (base64FotoTemp) {
                 item.photo = base64FotoTemp;
                 rimuoviFoto();
@@ -808,7 +905,6 @@
                 return;
             }
 
-            // Altrimenti cambia lo stato (comprato / da comprare)
             item.bought = !item.bought;
             salvaSulCloud();
         }
@@ -849,9 +945,17 @@
             }
         }
 
+        window.scrollToCategory = function(catName) {
+            const headerElem = document.getElementById('cat-header-' + catName.replace(/\s+/g, '-'));
+            if (headerElem) {
+                headerElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         function renderAll() {
             popolaSelectCategorie();
             renderCategoriesSettings();
+            renderCatalogoIcone();
             aggiornaStatoPulsanteToggle();
             renderItems();
             renderBought();
@@ -896,12 +1000,13 @@
 
         function renderItems() {
             const container = document.getElementById('items-container');
+            const sideTabs = document.getElementById('category-side-tabs');
             if(!container) return;
             container.innerHTML = '';
+            sideTabs.innerHTML = '';
 
             let toBuy = currentItems.filter(item => !item.bought);
 
-            // Filtro ricerca testuale
             if (filtroRicercaTesto) {
                 toBuy = toBuy.filter(item => item.text.toLowerCase().includes(filtroRicercaTesto));
             }
@@ -917,22 +1022,35 @@
             }
 
             if (groupByCategories) {
-                // Raggruppamento per categoria (segnalibri)
-                currentCategories.forEach(cat => {
+                currentCategories.forEach((cat, idx) => {
                     const itemsInCat = toBuy.filter(item => item.category === cat.name);
                     if (itemsInCat.length > 0) {
+                        const color = categoryColors[idx % categoryColors.length];
+                        const safeCatId = 'cat-header-' + cat.name.replace(/\s+/g, '-');
+
+                        // Header Categoria nella Lista
                         const catHeader = document.createElement('div');
-                        catHeader.className = "bg-emerald-100 text-emerald-900 font-bold text-[10px] px-2.5 py-1 rounded-lg mt-2 mb-1 flex items-center gap-1.5 uppercase tracking-wider";
+                        catHeader.id = safeCatId;
+                        catHeader.style.backgroundColor = color;
+                        catHeader.className = "text-white font-bold text-[10px] px-2.5 py-1 rounded-lg mt-2 mb-1 flex items-center gap-1.5 uppercase tracking-wider shadow-sm";
                         catHeader.innerHTML = `<i class="fa-solid ${cat.icon}"></i> ${escapeHtml(cat.name)}`;
                         container.appendChild(catHeader);
 
                         itemsInCat.forEach(item => {
                             container.appendChild(createItemElement(item));
                         });
+
+                        // Linguetta Laterale (Stile Separatore Ad Anelli)
+                        const tabBtn = document.createElement('div');
+                        tabBtn.className = "tab-index-item";
+                        tabBtn.style.backgroundColor = color;
+                        tabBtn.title = cat.name;
+                        tabBtn.innerHTML = `<i class="fa-solid ${cat.icon}"></i>`;
+                        tabBtn.onclick = () => scrollToCategory(cat.name);
+                        sideTabs.appendChild(tabBtn);
                     }
                 });
             } else {
-                // Lista semplice ordinata alfabetica
                 toBuy.sort((a, b) => a.text.localeCompare(b.text));
                 toBuy.forEach(item => {
                     container.appendChild(createItemElement(item));
