@@ -397,7 +397,7 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
 
-            document.querySelectorAll('body .fixed button, body button[id^="nav-"]').forEach(btn => {
+            document.querySelectorAll('body button[id^="nav-"]').forEach(btn => {
                 btn.classList.remove('text-emerald-600');
                 btn.classList.add('text-gray-400');
             });
@@ -548,7 +548,6 @@
             input.focus();
         });
 
-        // Apertura tendina a scelta rapida (senza digitazione)
         window.apriModaleCategoria = function(id, event) {
             event.stopPropagation();
             itemIdDaModificare = id;
@@ -819,7 +818,7 @@
             const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal-damy):", roomId);
             if (nuovaStanza && nuovaStanza.trim() !== "") {
                 roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
-                localStorage.setItem('shopping_room_id', roomId)[cite: 1];
+                localStorage.setItem('shopping_room_id', roomId);
                 document.getElementById('current-room-label').innerText = roomId;
                 document.getElementById('settings-room-label').innerText = roomId;
                 connettiAlDB();
@@ -837,6 +836,7 @@
 
         function popolaSelectCategorie() {
             const select = document.getElementById('category-input');
+            if(!select) return;
             const valCorrente = select.value;
             select.innerHTML = '';
             currentCategories.forEach(cat => {
@@ -871,6 +871,7 @@
 
         function renderItems() {
             const container = document.getElementById('items-container');
+            if(!container) return;
             container.innerHTML = '';
 
             let toBuy = currentItems.filter(item => !item.bought);
@@ -899,6 +900,7 @@
 
         function renderBought() {
             const container = document.getElementById('bought-container');
+            if(!container) return;
             container.innerHTML = '';
 
             let bought = currentItems.filter(item => item.bought);
@@ -952,6 +954,7 @@
 
         function renderCosts() {
             const container = document.getElementById('costs-container');
+            if(!container) return;
             container.innerHTML = '';
 
             const now = new Date();
@@ -1002,6 +1005,7 @@
 
         function renderCards() {
             const container = document.getElementById('cards-container');
+            if(!container) return;
             container.innerHTML = '';
 
             if(currentCards.length === 0) {
