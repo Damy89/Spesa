@@ -251,7 +251,6 @@
                 </div>
 
                 <form id="card-form" class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-2 text-xs shrink-0">
-                    <!-- Selettore Negozio con Loghi/Icone Originali -->
                     <div class="grid grid-cols-2 gap-1.5">
                         <select id="card-brand-select" onchange="selezionaBrandCarta(this.value)" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <option value="">-- Scegli Marchio --</option>
@@ -285,7 +284,6 @@
                         </button>
                     </div>
 
-                    <!-- Campi nascosti per icona e colore brand -->
                     <input type="hidden" id="card-icon" value="fa-id-card">
                     <input type="hidden" id="card-color" value="#10b981">
 
@@ -922,8 +920,11 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 (decodedText, decodedResult) => {
-                    document.getElementById('card-number').value = decodedText;
-                    if (decodedResult.result.format && decodedResult.result.format.formatName.includes("QR")) {
+                    // Forza la lettura come stringa esatta preservando gli zeri iniziali
+                    let codicePulito = String(decodedText).trim();
+                    document.getElementById('card-number').value = codicePulito;
+                    
+                    if (decodedResult && decodedResult.result && decodedResult.result.format && decodedResult.result.format.formatName && decodedResult.result.format.formatName.includes("QR")) {
                         document.getElementById('card-type').value = "qrcode";
                     } else {
                         document.getElementById('card-type').value = "barcode";
