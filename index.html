@@ -920,8 +920,13 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 (decodedText, decodedResult) => {
-                    // Forza la lettura come stringa esatta preservando gli zeri iniziali
                     let codicePulito = String(decodedText).trim();
+                    
+                    // Se la fotocamera legge un codice a barre standard (EAN) da 12 cifre, forza l'aggiunta dello zero iniziale (13 cifre)
+                    if (codicePulito.length === 12 && /^\d+$/.test(codicePulito)) {
+                        codicePulito = "0" + codicePulito;
+                    }
+
                     document.getElementById('card-number').value = codicePulito;
                     
                     if (decodedResult && decodedResult.result && decodedResult.result.format && decodedResult.result.format.formatName && decodedResult.result.format.formatName.includes("QR")) {
