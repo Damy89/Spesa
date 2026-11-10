@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="it" class="h-full overflow-hidden select-none">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spesa Sincronizzata in Tempo Reale</title>
@@ -305,6 +303,21 @@
                     <i class="fa-solid fa-gear text-emerald-600"></i> Impostazioni App
                 </h2>
 
+                <!-- Gestione Stanza con Menu a Tendina e Storico Stanze -->
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
+                    <label class="font-semibold text-gray-700 block"><i class="fa-solid fa-door-open text-emerald-600"></i> Gestione Stanza</label>
+                    <p class="text-[10px] text-gray-500">Seleziona una stanza recente o creane una nuova.</p>
+                    
+                    <div class="flex gap-1.5">
+                        <select id="room-select" onchange="selezionaStanzaPreset(this.value)" class="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
+                            <!-- Popolato dinamicamente con le stanze salvate -->
+                        </select>
+                        <button onclick="cambiaStanzaNuova()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-medium transition text-xs shrink-0">
+                            + Nuova
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Importa Lista Rapida -->
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                     <label class="font-semibold text-gray-700 block"><i class="fa-solid fa-file-arrow-down text-emerald-600"></i> Importa Lista Rapida</label>
@@ -347,14 +360,6 @@
                     </div>
                     <button onclick="aggiungiNuovaCategoria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-medium transition text-xs mt-1">
                         + Aggiungi Categoria
-                    </button>
-                </div>
-
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
-                    <label class="font-semibold text-gray-700 block">Stanza Corrente</label>
-                    <p class="text-gray-500 mb-1">In uso: <strong id="settings-room-label">famiglia</strong></p>
-                    <button onclick="cambiaStanza()" class="w-full bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-1.5 rounded-lg font-medium transition">
-                        Cambia Stanza (es. personal-damy)
                     </button>
                 </div>
 
@@ -426,8 +431,15 @@
         db.enablePersistence().catch(() => {});
 
         let roomId = localStorage.getItem('shopping_room_id') || 'famiglia';
+        
+        // Gestione elenco stanze salvate
+        let savedRooms = JSON.parse(localStorage.getItem('saved_rooms')) || ['famiglia', 'personal-damy'];
+        if (!savedRooms.includes(roomId)) {
+            savedRooms.push(roomId);
+            localStorage.setItem('saved_rooms', JSON.stringify(savedRooms));
+        }
+
         document.getElementById('current-room-label').innerText = roomId;
-        document.getElementById('settings-room-label').innerText = roomId;
 
         let voucherValue = parseFloat(localStorage.getItem('voucher_value')) || 8.0;
         document.getElementById('voucher-value-input').value = voucherValue;
@@ -923,12 +935,9 @@
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 (decodedText, decodedResult) => {
                     let codicePulito = String(decodedText).trim();
-                    
-                    // Se la fotocamera legge un codice a barre standard (EAN) da 12 cifre, forza l'aggiunta dello zero iniziale (13 cifre)
                     if (codicePulito.length === 12 && /^\d+$/.test(codicePulito)) {
                         codicePulito = "0" + codicePulito;
                     }
-
                     document.getElementById('card-number').value = codicePulito;
                     
                     if (decodedResult && decodedResult.result && decodedResult.result.format && decodedResult.result.format.formatName && decodedResult.result.format.formatName.includes("QR")) {
@@ -1002,15 +1011,42 @@
             }
         }
 
-        window.cambiaStanza = function() {
-            const nuovaStanza = prompt("Inserisci il nome della stanza (es. famiglia o personal-damy):", roomId);
+        window.selezionaStanzaPreset = function(nuovaStanza) {
+            if (!nuovaStanza) return;
+            cambiaStanzaA(nuovaStanza);
+        }
+
+        window.cambiaStanzaNuova = function() {
+            const nuovaStanza = prompt("Inserisci il nome della nuova stanza:", "famiglia");
             if (nuovaStanza && nuovaStanza.trim() !== "") {
-                roomId = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
-                localStorage.setItem('shopping_room_id', roomId);
-                document.getElementById('current-room-label').innerText = roomId;
-                document.getElementById('settings-room-label').innerText = roomId;
-                connettiAlDB();
+                const stanzaFormattata = nuovaStanza.trim().toLowerCase().replace(/\s+/g, '-');
+                if (!savedRooms.includes(stanzaFormattata)) {
+                    savedRooms.push(stanzaFormattata);
+                    localStorage.setItem('saved_rooms', JSON.stringify(savedRooms));
+                }
+                cambiaStanzaA(stanzaFormattata);
             }
+        }
+
+        function cambiaStanzaA(nomeStanza) {
+            roomId = nomeStanza;
+            localStorage.setItem('shopping_room_id', roomId);
+            document.getElementById('current-room-label').innerText = roomId;
+            renderRoomSelect();
+            connettiAlDB();
+        }
+
+        function renderRoomSelect() {
+            const select = document.getElementById('room-select');
+            if (!select) return;
+            select.innerHTML = '';
+            savedRooms.forEach(room => {
+                const opt = document.createElement('option');
+                opt.value = room;
+                opt.innerText = room;
+                if (room === roomId) opt.selected = true;
+                select.appendChild(opt);
+            });
         }
 
         window.scrollToCategory = function(catName) {
@@ -1024,6 +1060,7 @@
             popolaSelectCategorie();
             renderCategoriesSettings();
             renderCatalogoIcone();
+            renderRoomSelect();
             aggiornaStatoPulsanteToggle();
             renderItems();
             renderBought();
